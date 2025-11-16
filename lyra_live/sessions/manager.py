@@ -624,3 +624,299 @@ class SessionManager:
         print(f"{'='*50}\n")
 
         return result
+
+    def run_voice_pitch_match_drill(
+        self,
+        num_exercises: int = 10,
+        min_pitch: int = 55,
+        max_pitch: int = 79
+    ):
+        """
+        Run pitch matching drill for voice.
+
+        Args:
+            num_exercises: Number of pitches to match
+            min_pitch: Minimum MIDI note (default G3 = 55)
+            max_pitch: Maximum MIDI note (default G5 = 79)
+
+        Returns:
+            List of VoiceResults
+        """
+        from lyra_live.voice.exercises import PitchMatchExercise
+        from lyra_live.voice.pitch import PitchDetector
+
+        if not isinstance(self.device, PitchDetector):
+            print("Error: This drill requires a pitch detection device")
+            return []
+
+        results = []
+
+        print(f"\n🎤 Starting Pitch Match Drill")
+        print(f"   Device: Voice Input (Microphone)")
+        print(f"   Exercises: {num_exercises}")
+        print(f"   Range: MIDI {min_pitch}-{max_pitch}")
+        print(f"   Instructions: Sing the pitch you hear\n")
+
+        for i in range(num_exercises):
+            # Generate exercise
+            exercise = PitchMatchExercise.generate_random(min_pitch, max_pitch)
+            target_pitch = exercise.metadata["target_pitch"]
+            tolerance_cents = exercise.metadata["tolerance_cents"]
+
+            print(f"Exercise {i+1}/{num_exercises}")
+            print(f"  Listen to the pitch...")
+
+            # Play via Ableton (stubbed for MVP)
+            self.ableton.play_exercise(exercise)
+
+            # For MVP, show the target pitch for testing
+            from lyra_live.ear_training.base import CHROMATIC_NOTES
+            note_name = CHROMATIC_NOTES[target_pitch % 12]
+            octave = target_pitch // 12 - 1
+            print(f"  [Pitch plays: {note_name}{octave}]")
+
+            print(f"  Now sing the pitch...")
+
+            # Start listening
+            self.device.start_listening()
+
+            try:
+                # Get sustained pitch reading
+                sung_pitch = self.device.get_sustained_pitch(
+                    duration_ms=2000,
+                    min_confidence=0.7
+                )
+
+                # Get cents deviation if we detected a pitch
+                cents_deviation = None
+                if sung_pitch is not None:
+                    reading = self.device.get_pitch_reading()
+                    if reading:
+                        cents_deviation = reading.cents_from_pitch
+
+                # Validate
+                result = PitchMatchExercise.validate(
+                    target_pitch=target_pitch,
+                    sung_pitch=sung_pitch,
+                    cents_deviation=cents_deviation,
+                    tolerance_cents=tolerance_cents
+                )
+
+                print(f"  {result.feedback}\n")
+                results.append(result)
+
+            except KeyboardInterrupt:
+                print("\n\n⏸️  Session paused by user.")
+                break
+            finally:
+                self.device.stop_listening()
+
+        # Session summary
+        if results:
+            correct_count = sum(1 for r in results if r.correct)
+            total = len(results)
+            avg_accuracy = sum(r.accuracy_percentage for r in results) / total
+
+            print(f"\n{'='*50}")
+            print(f"Pitch Match Drill Complete!")
+            print(f"  Score: {correct_count}/{total} correct")
+            print(f"  Average Accuracy: {avg_accuracy:.1f}%")
+            print(f"{'='*50}\n")
+
+        return results
+
+    def run_voice_scale_drill(
+        self,
+        num_exercises: int = 5,
+        scale_types: List[str] = None
+    ):
+        """
+        Run scale singing drill.
+
+        Args:
+            num_exercises: Number of scales to practice
+            scale_types: List of scale types (None = all)
+
+        Returns:
+            List of results
+        """
+        from lyra_live.voice.exercises import ScaleExercise
+        from lyra_live.voice.pitch import PitchDetector
+
+        if not isinstance(self.device, PitchDetector):
+            print("Error: This drill requires a pitch detection device")
+            return []
+
+        results = []
+
+        print(f"\n🎤 Starting Scale Singing Drill")
+        print(f"   Device: Voice Input (Microphone)")
+        print(f"   Exercises: {num_exercises}")
+        print(f"   Instructions: Sing each note of the scale\n")
+
+        for i in range(num_exercises):
+            # Generate exercise
+            exercise = ScaleExercise.generate_random(scale_types=scale_types)
+            scale_type = exercise.metadata["scale_type"]
+            root_note = exercise.metadata["root_note"]
+            tolerance_cents = exercise.metadata["tolerance_cents"]
+
+            from lyra_live.ear_training.base import CHROMATIC_NOTES
+            root_name = CHROMATIC_NOTES[root_note % 12]
+
+            print(f"Exercise {i+1}/{num_exercises}: {scale_type.replace('_', ' ').title()} scale")
+            print(f"  Root: {root_name}")
+            print(f"  Listen to the scale...")
+
+            # Play via Ableton (stubbed)
+            self.ableton.play_exercise(exercise)
+            print(f"  [Scale plays: {len(exercise.notes)} notes]")
+
+            print(f"  Now sing the scale...")
+
+            # Capture sung pitches
+            self.device.start_listening()
+            sung_pitches = []
+
+            try:
+                for note_num in range(len(exercise.notes)):
+                    print(f"    Note {note_num+1}/{len(exercise.notes)}... ", end='', flush=True)
+
+                    pitch = self.device.get_sustained_pitch(
+                        duration_ms=1500,
+                        min_confidence=0.7
+                    )
+
+                    if pitch is not None:
+                        sung_pitches.append(pitch)
+                        print(f"{CHROMATIC_NOTES[pitch % 12]}")
+                    else:
+                        print("(not detected)")
+
+                # Validate
+                is_perfect, accuracy, feedback = ScaleExercise.validate_sequence(
+                    expected_notes=exercise.correct_response,
+                    sung_pitches=sung_pitches,
+                    tolerance_cents=tolerance_cents
+                )
+
+                print(f"  {feedback}\n")
+
+                results.append({
+                    "correct": is_perfect,
+                    "accuracy": accuracy,
+                    "feedback": feedback
+                })
+
+            except KeyboardInterrupt:
+                print("\n\n⏸️  Session paused by user.")
+                break
+            finally:
+                self.device.stop_listening()
+
+        # Session summary
+        if results:
+            correct_count = sum(1 for r in results if r["correct"])
+            total = len(results)
+
+            print(f"\n{'='*50}")
+            print(f"Scale Singing Drill Complete!")
+            print(f"  Score: {correct_count}/{total} perfect scales")
+            print(f"{'='*50}\n")
+
+        return results
+
+    def run_voice_sight_singing_drill(
+        self,
+        num_exercises: int = 5,
+        phrase_length: int = 4
+    ):
+        """
+        Run sight-singing drill.
+
+        Args:
+            num_exercises: Number of phrases to practice
+            phrase_length: Length of each phrase (notes)
+
+        Returns:
+            List of results
+        """
+        from lyra_live.voice.exercises import SightSingingExercise
+        from lyra_live.voice.pitch import PitchDetector
+
+        if not isinstance(self.device, PitchDetector):
+            print("Error: This drill requires a pitch detection device")
+            return []
+
+        results = []
+
+        print(f"\n🎤 Starting Sight-Singing Drill")
+        print(f"   Device: Voice Input (Microphone)")
+        print(f"   Exercises: {num_exercises}")
+        print(f"   Phrase Length: {phrase_length} notes")
+        print(f"   Instructions: Sing the melody you hear\n")
+
+        for i in range(num_exercises):
+            # Generate exercise (stepwise phrases are easier)
+            exercise = SightSingingExercise.generate_stepwise_phrase(
+                phrase_length=phrase_length
+            )
+
+            print(f"Exercise {i+1}/{num_exercises}")
+            print(f"  Listen to the melody...")
+
+            # Play via Ableton (stubbed)
+            self.ableton.play_exercise(exercise)
+            print(f"  [Melody plays: {phrase_length} notes]")
+
+            print(f"  Now sing the melody...")
+
+            # Capture sung pitches
+            self.device.start_listening()
+            sung_pitches = []
+
+            try:
+                for note_num in range(phrase_length):
+                    pitch = self.device.get_sustained_pitch(
+                        duration_ms=1200,
+                        min_confidence=0.6
+                    )
+
+                    if pitch is not None:
+                        sung_pitches.append(pitch)
+
+                # Validate
+                from lyra_live.voice.exercises import ScaleExercise
+                is_perfect, accuracy, feedback = ScaleExercise.validate_sequence(
+                    expected_notes=exercise.correct_response,
+                    sung_pitches=sung_pitches,
+                    tolerance_cents=50
+                )
+
+                print(f"  {feedback}\n")
+
+                results.append({
+                    "correct": is_perfect,
+                    "accuracy": accuracy,
+                    "feedback": feedback
+                })
+
+            except KeyboardInterrupt:
+                print("\n\n⏸️  Session paused by user.")
+                break
+            finally:
+                self.device.stop_listening()
+
+        # Session summary
+        if results:
+            correct_count = sum(1 for r in results if r["correct"])
+            total = len(results)
+            avg_accuracy = sum(r["accuracy"] for r in results) / total if total > 0 else 0
+
+            print(f"\n{'='*50}")
+            print(f"Sight-Singing Drill Complete!")
+            print(f"  Score: {correct_count}/{total} perfect")
+            print(f"  Average Accuracy: {avg_accuracy:.1f}%")
+            print(f"{'='*50}\n")
+
+        return results
