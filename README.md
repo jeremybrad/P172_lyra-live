@@ -43,18 +43,27 @@ pip install -r requirements.txt
 
 ```bash
 # List available MIDI devices
-python -m lyra_live.cli list-devices
+python -m cli list-devices
 
 # Run interval recognition drill
-python -m lyra_live.cli practice-intervals --device "Your Device Name" --num-exercises 5
+python -m cli practice-intervals --device "Your Device Name" --num-exercises 5
+
+# Run chord quality drill
+python -m cli practice-chords --num-exercises 5 --chord-types triads
+
+# Run melody imitation drill
+python -m cli practice-melody --num-exercises 5 --melody-length 6
+
+# Run a deterministic demo (for video recording)
+python -m cli demo-intervals --mode correct
 ```
 
 **What happens**:
-1. Lyra plays an interval via Ableton
-2. You play the same interval on your MIDI device
+1. Lyra plays an exercise via Ableton (or shows visual feedback)
+2. You play the response on your MIDI device
 3. Lyra validates and gives feedback ("Correct! That's a perfect fifth")
-4. Repeat for 5 exercises
-5. See your score
+4. Repeat for N exercises
+5. See your score and accuracy percentage
 
 ---
 
@@ -119,14 +128,16 @@ P172_lyra-live/
 ### Phase 1 (MVP) ✅
 1. **Interval Recognition**: Identify intervals by ear (unison through octave)
 
-### Phase 2 🔄
-1. **Chord Quality**: Major, minor, diminished, augmented
-2. **Melody Imitation**: Play back 4-8 note phrases
+### Phase 2 ✅
+1. **Chord Quality**: Major, minor, diminished, augmented triads + 7th chords
+2. **Melody Imitation**: Play back 4-8 note melodic phrases
+3. **Lesson System**: Load MIDI files and practice phrases
 
 ### Phase 3 🎵
 1. **Beatles Pack**: Learn iconic melodies by ear ("Yesterday", "Let It Be", etc.)
 2. **Walking Bass**: Pedal exercises with chord changes
 3. **ii-V-I Progressions**: In all keys with visual hints
+4. **Device-Specific Features**: S88 Light Guide, LinnStrument MPE + LED grid, MojoPedals
 
 ---
 
@@ -220,20 +231,24 @@ pip install -r requirements.txt
 
 ## 🗺️ Roadmap
 
-### ✅ Phase 1: MVP (Current)
+### ✅ Phase 1: MVP (Complete)
 - [x] Project structure
 - [x] Device profiles (generic keyboard)
-- [ ] Interval recognition exercises
-- [ ] Ableton backend stub
-- [ ] CLI interface
-- [ ] Unit tests
+- [x] Interval recognition exercises
+- [x] Ableton backend stub
+- [x] CLI interface
+- [x] Unit tests (18 tests)
 
-### 🔄 Phase 2: Enhanced Devices
-- [ ] S88 profile with Light Guide integration
-- [ ] LinnStrument profile with MPE + LED grid
-- [ ] MojoPedals profile
-- [ ] Chord quality exercises
-- [ ] Melody imitation exercises
+### ✅ Phase 2: Exercise Expansion (Complete)
+- [x] Chord quality exercises (triads + 7th chords)
+- [x] Melody imitation exercises
+- [x] Lesson/MIDI file system
+- [x] TestDeviceProfile for simulation
+- [x] End-to-end tests (47 tests total)
+- [x] Demo flows for video recording
+- [ ] S88 profile with Light Guide integration (Phase 2.5)
+- [ ] LinnStrument profile with MPE + LED grid (Phase 2.5)
+- [ ] MojoPedals profile (Phase 2.5)
 
 ### 🎵 Phase 3: Beatles & Intelligence
 - [ ] Beatles melody pack (iconic songs)
@@ -273,6 +288,6 @@ Ready to practice? Follow the Quick Start above and run your first interval dril
 
 *"Not just ear training—intelligent musical education through your actual instruments."*
 
-**Status**: 🟡 Phase 1 MVP In Development  
-**Last Updated**: 2025-11-16  
-**Next Milestone**: Basic interval recognition working
+**Status**: 🟢 Phase 2 Complete - Full Exercise Suite Working
+**Last Updated**: 2025-11-16
+**Next Milestone**: Device-specific features (S88, LinnStrument, MojoPedals)
