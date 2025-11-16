@@ -10,11 +10,14 @@ from lyra_live.ear_training.base import Exercise, ExerciseResult, Note
 from lyra_live.ear_training.intervals import IntervalExercise
 from lyra_live.ear_training.chords import ChordQualityExercise
 from lyra_live.ear_training.melodies import MelodyImitationExercise
+from lyra_live.ear_training.rhythm import RhythmExerciseGenerator, RhythmValidator, Beat
 from lyra_live.ear_training.validator import ExerciseValidator
 from lyra_live.ableton_backend.client import AbletonMCPClient
 from lyra_live.lessons.core import Lesson
 from lyra_live.devices.test_device import TestDeviceProfile
+from lyra_live.devices.drum_kit import DrumKitProfile
 from typing import List
+import time
 
 
 class SessionManager:
@@ -418,3 +421,206 @@ class SessionManager:
                 print(f"  💪 Keep practicing - you'll improve!")
 
         print(f"{'='*50}\n")
+
+    def run_rhythm_snare_drill(
+        self,
+        subdivision: str = "eighth",
+        tempo_bpm: int = 80,
+        num_bars: int = 4
+    ):
+        """
+        Run rhythm drill focusing on snare only.
+
+        Args:
+            subdivision: "quarter", "eighth", or "sixteenth"
+            tempo_bpm: Tempo in beats per minute
+            num_bars: Number of bars to play
+
+        Returns:
+            RhythmResult with timing analysis
+        """
+        if not isinstance(self.device, DrumKitProfile):
+            print("Error: This drill requires a drum kit device profile")
+            return None
+
+        print(f"\n🥁 Starting Snare Rhythm Drill")
+        print(f"   Device: {self.device.device_name}")
+        print(f"   Pattern: Straight {subdivision} notes")
+        print(f"   Tempo: {tempo_bpm} BPM")
+        print(f"   Bars: {num_bars}")
+        print(f"   Instructions: Play steady {subdivision} notes on snare\n")
+
+        # Generate exercise
+        exercise = RhythmExerciseGenerator.generate_straight_pattern(
+            drum_part="snare",
+            subdivision=subdivision,
+            tempo_bpm=tempo_bpm,
+            num_bars=num_bars
+        )
+
+        # Calculate duration
+        duration_ms = exercise.grid.get_duration_ms()
+
+        print(f"Ready? Starting in 3...")
+        time.sleep(1)
+        print("2...")
+        time.sleep(1)
+        print("1...")
+        time.sleep(1)
+        print("GO!\n")
+
+        # Record start time
+        start_time = time.time() * 1000
+
+        # Capture drum hits
+        midi_events = self.device.detect_input(timeout_ms=duration_ms + 1000)
+
+        if not midi_events:
+            print("No drum hits detected.\n")
+            return None
+
+        # Convert MIDI events to Beats
+        actual_beats = []
+        for event in midi_events:
+            if event.type == 'note_on':
+                drum_part = self.device.get_drum_part(event.pitch)
+                if drum_part:
+                    # Adjust timestamp relative to start
+                    relative_time = event.timestamp_ms - start_time
+                    actual_beats.append(Beat(
+                        time_ms=int(relative_time),
+                        drum_part=drum_part,
+                        velocity=event.velocity
+                    ))
+
+        # Validate
+        result = RhythmValidator.validate_rhythm(
+            expected_grid=exercise.grid,
+            actual_hits=actual_beats,
+            tolerance_ms=50,
+            drum_part_filter="snare"
+        )
+
+        # Display results
+        print(f"\n{'='*50}")
+        print(f"Snare Rhythm Drill Complete!")
+        print(f"  Expected hits: {result.total_expected_hits}")
+        print(f"  Your hits: {result.total_actual_hits}")
+        print(f"  Correct: {result.correct_hits}")
+        print(f"  Accuracy: {result.accuracy_percentage:.1f}%")
+        if result.average_timing_error_ms != 0:
+            if result.average_timing_error_ms > 0:
+                print(f"  Timing: Rushing by {result.average_timing_error_ms:.1f}ms")
+            else:
+                print(f"  Timing: Dragging by {abs(result.average_timing_error_ms):.1f}ms")
+        print(f"\n  {result.feedback}")
+        print(f"{'='*50}\n")
+
+        return result
+
+    def run_rhythm_kit_drill(
+        self,
+        pattern_type: str = "backbeat",
+        tempo_bpm: int = 80,
+        num_bars: int = 4
+    ):
+        """
+        Run rhythm drill with full kit pattern.
+
+        Args:
+            pattern_type: "backbeat" or "syncopated"
+            tempo_bpm: Tempo in beats per minute
+            num_bars: Number of bars to play
+
+        Returns:
+            RhythmResult with timing analysis
+        """
+        if not isinstance(self.device, DrumKitProfile):
+            print("Error: This drill requires a drum kit device profile")
+            return None
+
+        print(f"\n🥁 Starting Full Kit Rhythm Drill")
+        print(f"   Device: {self.device.device_name}")
+        print(f"   Pattern: {pattern_type}")
+        print(f"   Tempo: {tempo_bpm} BPM")
+        print(f"   Bars: {num_bars}")
+        print(f"   Instructions: Play the full kit pattern\n")
+
+        # Generate exercise
+        if pattern_type == "backbeat":
+            exercise = RhythmExerciseGenerator.generate_backbeat_pattern(
+                tempo_bpm=tempo_bpm,
+                num_bars=num_bars
+            )
+        else:
+            exercise = RhythmExerciseGenerator.generate_syncopated_pattern(
+                drum_part="snare",
+                complexity=1,
+                tempo_bpm=tempo_bpm,
+                num_bars=num_bars
+            )
+
+        # Show pattern
+        print("Pattern breakdown:")
+        if pattern_type == "backbeat":
+            print("  Kick: beats 1 and 3")
+            print("  Snare: beats 2 and 4\n")
+
+        # Calculate duration
+        duration_ms = exercise.grid.get_duration_ms()
+
+        print(f"Ready? Starting in 3...")
+        time.sleep(1)
+        print("2...")
+        time.sleep(1)
+        print("1...")
+        time.sleep(1)
+        print("GO!\n")
+
+        # Record start time
+        start_time = time.time() * 1000
+
+        # Capture drum hits
+        midi_events = self.device.detect_input(timeout_ms=duration_ms + 1000)
+
+        if not midi_events:
+            print("No drum hits detected.\n")
+            return None
+
+        # Convert MIDI events to Beats
+        actual_beats = []
+        for event in midi_events:
+            if event.type == 'note_on':
+                drum_part = self.device.get_drum_part(event.pitch)
+                if drum_part:
+                    # Adjust timestamp relative to start
+                    relative_time = event.timestamp_ms - start_time
+                    actual_beats.append(Beat(
+                        time_ms=int(relative_time),
+                        drum_part=drum_part,
+                        velocity=event.velocity
+                    ))
+
+        # Validate (no drum part filter for full kit)
+        result = RhythmValidator.validate_rhythm(
+            expected_grid=exercise.grid,
+            actual_hits=actual_beats,
+            tolerance_ms=50
+        )
+
+        # Display results
+        print(f"\n{'='*50}")
+        print(f"Full Kit Rhythm Drill Complete!")
+        print(f"  Expected hits: {result.total_expected_hits}")
+        print(f"  Your hits: {result.total_actual_hits}")
+        print(f"  Correct: {result.correct_hits}")
+        print(f"  Accuracy: {result.accuracy_percentage:.1f}%")
+        if result.average_timing_error_ms != 0:
+            if result.average_timing_error_ms > 0:
+                print(f"  Timing: Rushing by {result.average_timing_error_ms:.1f}ms")
+            else:
+                print(f"  Timing: Dragging by {abs(result.average_timing_error_ms):.1f}ms")
+        print(f"\n  {result.feedback}")
+        print(f"{'='*50}\n")
+
+        return result
