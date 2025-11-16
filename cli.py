@@ -287,6 +287,271 @@ def practice_lesson(device, lesson_id):
 
 
 @cli.command()
+@click.option('--device', default=None, help='Drum kit device name')
+@click.option('--subdivision', default='eighth', type=click.Choice(['quarter', 'eighth', 'sixteenth']))
+@click.option('--tempo', default=80, help='Tempo in BPM')
+@click.option('--bars', default=4, help='Number of bars to play')
+def practice_rhythm_snare(device, subdivision, tempo, bars):
+    """
+    Practice rhythm on snare drum only.
+
+    Example:
+        lyra practice-rhythm-snare --subdivision eighth --tempo 80 --bars 4
+    """
+    try:
+        from lyra_live.devices.drum_kit import DonnerDrumKitProfile
+        from lyra_live.sessions.manager import SessionManager
+        from lyra_live.ableton_backend.client import AbletonMCPClient
+
+        click.echo("\n🔍 Checking Ableton MCP server connection...")
+        ableton = AbletonMCPClient()
+
+        if not ableton.health_check():
+            click.echo("⚠️  Warning: P050 Ableton MCP server not reachable\n")
+        else:
+            click.echo("✓ Connected to Ableton MCP server\n")
+
+        # Select drum kit device
+        if not device:
+            devices = list_midi_devices()
+            drum_devices = [d for d in devices if 'drum' in d.lower() or 'donner' in d.lower()]
+
+            if not drum_devices:
+                click.echo("❌ No drum kit devices found")
+                click.echo("   Available devices:")
+                for d in devices:
+                    click.echo(f"     - {d}")
+                return
+
+            device = drum_devices[0]
+            click.echo(f"🥁 Using drum kit: {device}")
+        else:
+            click.echo(f"🥁 Using drum kit: {device}")
+
+        # Create drum kit profile
+        profile = DonnerDrumKitProfile(device)
+        manager = SessionManager(profile, ableton)
+
+        # Run snare drill
+        manager.run_rhythm_snare_drill(
+            subdivision=subdivision,
+            tempo_bpm=tempo,
+            num_bars=bars
+        )
+
+    except KeyboardInterrupt:
+        click.echo("\n\n👋 Bye! Keep grooving!")
+    except Exception as e:
+        click.echo(f"\n❌ Error: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
+@click.option('--device', default=None, help='Drum kit device name')
+@click.option('--pattern', default='backbeat', type=click.Choice(['backbeat', 'syncopated']))
+@click.option('--tempo', default=80, help='Tempo in BPM')
+@click.option('--bars', default=4, help='Number of bars to play')
+def practice_rhythm_kit(device, pattern, tempo, bars):
+    """
+    Practice rhythm patterns on full drum kit.
+
+    Example:
+        lyra practice-rhythm-kit --pattern backbeat --tempo 80 --bars 4
+    """
+    try:
+        from lyra_live.devices.drum_kit import DonnerDrumKitProfile
+        from lyra_live.sessions.manager import SessionManager
+        from lyra_live.ableton_backend.client import AbletonMCPClient
+
+        click.echo("\n🔍 Checking Ableton MCP server connection...")
+        ableton = AbletonMCPClient()
+
+        if not ableton.health_check():
+            click.echo("⚠️  Warning: P050 Ableton MCP server not reachable\n")
+        else:
+            click.echo("✓ Connected to Ableton MCP server\n")
+
+        # Select drum kit device
+        if not device:
+            devices = list_midi_devices()
+            drum_devices = [d for d in devices if 'drum' in d.lower() or 'donner' in d.lower()]
+
+            if not drum_devices:
+                click.echo("❌ No drum kit devices found")
+                return
+
+            device = drum_devices[0]
+            click.echo(f"🥁 Using drum kit: {device}")
+        else:
+            click.echo(f"🥁 Using drum kit: {device}")
+
+        # Create drum kit profile
+        profile = DonnerDrumKitProfile(device)
+        manager = SessionManager(profile, ableton)
+
+        # Run kit drill
+        manager.run_rhythm_kit_drill(
+            pattern_type=pattern,
+            tempo_bpm=tempo,
+            num_bars=bars
+        )
+
+    except KeyboardInterrupt:
+        click.echo("\n\n👋 Bye! Keep grooving!")
+    except Exception as e:
+        click.echo(f"\n❌ Error: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
+@click.option('--exercises', default=10, help='Number of pitches to match')
+@click.option('--min-pitch', default=55, help='Minimum MIDI pitch (G3)')
+@click.option('--max-pitch', default=79, help='Maximum MIDI pitch (G5)')
+def practice_voice_pitch(exercises, min_pitch, max_pitch):
+    """
+    Practice pitch matching with voice.
+
+    Example:
+        lyra practice-voice-pitch --exercises 10
+    """
+    try:
+        from lyra_live.voice.pitch import AubioPitchDetector
+        from lyra_live.sessions.manager import SessionManager
+        from lyra_live.ableton_backend.client import AbletonMCPClient
+
+        click.echo("\n🔍 Checking Ableton MCP server connection...")
+        ableton = AbletonMCPClient()
+
+        if not ableton.health_check():
+            click.echo("⚠️  Warning: P050 Ableton MCP server not reachable\n")
+        else:
+            click.echo("✓ Connected to Ableton MCP server\n")
+
+        # Create pitch detector
+        click.echo("🎤 Initializing microphone input...")
+        detector = AubioPitchDetector()
+
+        manager = SessionManager(detector, ableton)
+
+        # Run pitch match drill
+        manager.run_voice_pitch_match_drill(
+            num_exercises=exercises,
+            min_pitch=min_pitch,
+            max_pitch=max_pitch
+        )
+
+    except KeyboardInterrupt:
+        click.echo("\n\n👋 Bye! Keep singing!")
+    except ImportError as e:
+        click.echo(f"\n❌ Error: {e}")
+        click.echo("   Voice features require aubio and pyaudio.")
+        click.echo("   Install with: pip install aubio pyaudio\n")
+    except Exception as e:
+        click.echo(f"\n❌ Error: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
+@click.option('--exercises', default=5, help='Number of scales to sing')
+@click.option('--scales', default='major,minor', help='Comma-separated scale types')
+def practice_voice_scale(exercises, scales):
+    """
+    Practice singing scales.
+
+    Example:
+        lyra practice-voice-scale --exercises 5 --scales major,minor
+    """
+    try:
+        from lyra_live.voice.pitch import AubioPitchDetector
+        from lyra_live.sessions.manager import SessionManager
+        from lyra_live.ableton_backend.client import AbletonMCPClient
+
+        click.echo("\n🔍 Checking Ableton MCP server connection...")
+        ableton = AbletonMCPClient()
+
+        if not ableton.health_check():
+            click.echo("⚠️  Warning: P050 Ableton MCP server not reachable\n")
+        else:
+            click.echo("✓ Connected to Ableton MCP server\n")
+
+        # Parse scale types
+        scale_types = [s.strip() for s in scales.split(',')]
+
+        # Create pitch detector
+        click.echo("🎤 Initializing microphone input...")
+        detector = AubioPitchDetector()
+
+        manager = SessionManager(detector, ableton)
+
+        # Run scale drill
+        manager.run_voice_scale_drill(
+            num_exercises=exercises,
+            scale_types=scale_types
+        )
+
+    except KeyboardInterrupt:
+        click.echo("\n\n👋 Bye! Keep singing!")
+    except ImportError as e:
+        click.echo(f"\n❌ Error: {e}")
+        click.echo("   Voice features require aubio and pyaudio.")
+        click.echo("   Install with: pip install aubio pyaudio\n")
+    except Exception as e:
+        click.echo(f"\n❌ Error: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
+@click.option('--exercises', default=5, help='Number of phrases to sing')
+@click.option('--length', default=4, help='Phrase length (notes)')
+def practice_voice_sightsing(exercises, length):
+    """
+    Practice sight-singing melodies.
+
+    Example:
+        lyra practice-voice-sightsing --exercises 5 --length 4
+    """
+    try:
+        from lyra_live.voice.pitch import AubioPitchDetector
+        from lyra_live.sessions.manager import SessionManager
+        from lyra_live.ableton_backend.client import AbletonMCPClient
+
+        click.echo("\n🔍 Checking Ableton MCP server connection...")
+        ableton = AbletonMCPClient()
+
+        if not ableton.health_check():
+            click.echo("⚠️  Warning: P050 Ableton MCP server not reachable\n")
+        else:
+            click.echo("✓ Connected to Ableton MCP server\n")
+
+        # Create pitch detector
+        click.echo("🎤 Initializing microphone input...")
+        detector = AubioPitchDetector()
+
+        manager = SessionManager(detector, ableton)
+
+        # Run sight-singing drill
+        manager.run_voice_sight_singing_drill(
+            num_exercises=exercises,
+            phrase_length=length
+        )
+
+    except KeyboardInterrupt:
+        click.echo("\n\n👋 Bye! Keep singing!")
+    except ImportError as e:
+        click.echo(f"\n❌ Error: {e}")
+        click.echo("   Voice features require aubio and pyaudio.")
+        click.echo("   Install with: pip install aubio pyaudio\n")
+    except Exception as e:
+        click.echo(f"\n❌ Error: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
 @click.option('--mode', default='correct', help='Demo mode: correct, wrong_interval, partial_melody')
 def demo_intervals(mode):
     """Run interval recognition demo (deterministic, for video recording)"""
