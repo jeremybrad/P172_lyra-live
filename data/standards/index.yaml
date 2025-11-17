@@ -1,0 +1,148 @@
+# Jazz Standards Library Index
+#
+# This file contains metadata for jazz standards used in Lyra Live.
+# Each tune should have a corresponding MIDI file in the data/standards/ directory.
+#
+# Format:
+# - id: Unique identifier (snake_case)
+#   title: Full tune title
+#   composer: Composer name(s)
+#   key: Key signature (e.g., C, Bb, F)
+#   tempo: Suggested tempo in BPM
+#   form: Song form (e.g., AABA, ABAC, blues)
+#   chorus_length_bars: Total bars per chorus
+#   time_signature: [numerator, denominator]
+#   midi_path: Relative path to MIDI file
+#   style: Jazz style (bebop, swing, ballad, latin, etc.)
+#   difficulty: beginner, intermediate, advanced
+
+tunes:
+  - id: autumn_leaves
+    title: "Autumn Leaves"
+    composer: "Joseph Kosma"
+    key: "Gm"
+    tempo: 160
+    form: "AABC"
+    chorus_length_bars: 32
+    time_signature: [4, 4]
+    midi_path: "autumn_leaves.mid"
+    style: "swing"
+    difficulty: "beginner"
+    description: "Classic ii-V-I progression study with minor key modulation"
+
+  - id: all_the_things_you_are
+    title: "All The Things You Are"
+    composer: "Jerome Kern"
+    key: "Ab"
+    tempo: 140
+    form: "ABAC"
+    chorus_length_bars: 36
+    time_signature: [4, 4]
+    midi_path: "all_the_things_you_are.mid"
+    style: "swing"
+    difficulty: "intermediate"
+    description: "Moving through multiple key centers with smooth modulations"
+
+  - id: blue_bossa
+    title: "Blue Bossa"
+    composer: "Kenny Dorham"
+    key: "Cm"
+    tempo: 130
+    form: "AABA"
+    chorus_length_bars: 16
+    time_signature: [4, 4]
+    midi_path: "blue_bossa.mid"
+    style: "latin"
+    difficulty: "beginner"
+    description: "Latin-jazz classic with simple but effective harmonic movement"
+
+  - id: blues_in_f
+    title: "Blues in F"
+    composer: "Traditional"
+    key: "F"
+    tempo: 120
+    form: "blues"
+    chorus_length_bars: 12
+    time_signature: [4, 4]
+    midi_path: "blues_f.mid"
+    style: "blues"
+    difficulty: "beginner"
+    description: "Standard 12-bar blues progression"
+
+  - id: stella_by_starlight
+    title: "Stella By Starlight"
+    composer: "Victor Young"
+    key: "Bb"
+    tempo: 120
+    form: "ABCD"
+    chorus_length_bars: 32
+    time_signature: [4, 4]
+    midi_path: "stella_by_starlight.mid"
+    style: "ballad"
+    difficulty: "advanced"
+    description: "Complex harmonic movement with unexpected resolutions"
+
+  - id: rhythm_changes_bb
+    title: "Rhythm Changes in Bb"
+    composer: "George Gershwin (I Got Rhythm)"
+    key: "Bb"
+    tempo: 200
+    form: "AABA"
+    chorus_length_bars: 32
+    time_signature: [4, 4]
+    midi_path: "rhythm_changes_bb.mid"
+    style: "bebop"
+    difficulty: "intermediate"
+    description: "Fast-paced bebop standard based on 'I Got Rhythm' changes"
+
+  - id: days_of_wine_and_roses
+    title: "Days of Wine and Roses"
+    composer: "Henry Mancini"
+    key: "F"
+    tempo: 160
+    form: "ABAC"
+    chorus_length_bars: 32
+    time_signature: [4, 4]
+    midi_path: "days_of_wine_and_roses.mid"
+    style: "swing"
+    difficulty: "intermediate"
+    description: "Beautiful melody with sophisticated harmonic movement"
+
+  - id: my_funny_valentine
+    title: "My Funny Valentine"
+    composer: "Richard Rodgers"
+    key: "Cm"
+    tempo: 70
+    form: "ABAC"
+    chorus_length_bars: 32
+    time_signature: [4, 4]
+    midi_path: "my_funny_valentine.mid"
+    style: "ballad"
+    difficulty: "beginner"
+    description: "Slow ballad with expressive phrasing opportunities"
+
+  - id: giant_steps
+    title: "Giant Steps"
+    composer: "John Coltrane"
+    key: "B"
+    tempo: 280
+    form: "AB"
+    chorus_length_bars: 16
+    time_signature: [4, 4]
+    midi_path: "giant_steps.mid"
+    style: "bebop"
+    difficulty: "advanced"
+    description: "Coltrane changes - challenging harmonic progression with thirds cycles"
+
+  - id: satin_doll
+    title: "Satin Doll"
+    composer: "Duke Ellington"
+    key: "C"
+    tempo: 140
+    form: "AABA"
+    chorus_length_bars: 32
+    time_signature: [4, 4]
+    midi_path: "satin_doll.mid"
+    style: "swing"
+    difficulty: "beginner"
+    description: "Classic Duke Ellington tune with accessible changes"
