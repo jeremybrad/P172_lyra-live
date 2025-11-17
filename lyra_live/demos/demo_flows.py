@@ -6,7 +6,7 @@ that can be aligned with recorded video later.
 """
 
 import random
-from lyra_live.devices.test_device import TestDeviceProfile
+from lyra_live.devices.test_device import TestDeviceProfile, TestDrumKitProfile
 from lyra_live.sessions.manager import SessionManager
 from lyra_live.ableton_backend.client import AbletonMCPClient
 from lyra_live.lessons.core import Lesson, LessonPhrase
@@ -209,3 +209,188 @@ def run_full_demo_suite():
     print("\nAll Lyra Live core features demonstrated successfully.")
     print("Thank you for watching!")
     print()
+
+
+def run_rhythm_demo(mode: str = "perfect"):
+    """
+    Run a deterministic rhythm demo with drum kit.
+
+    Args:
+        mode: TestDrumKitProfile mode (perfect, rushing, dragging, inconsistent)
+
+    Returns:
+        RhythmResult
+    """
+    print("\n" + "="*60)
+    print("LYRA LIVE - RHYTHM/TIMING DEMO")
+    print("="*60)
+    print(f"Mode: {mode}")
+    print()
+
+    # Set random seed for reproducibility
+    random.seed(789)
+
+    # Create test drum kit and session
+    device = TestDrumKitProfile(mode=mode)
+    ableton = AbletonMCPClient()
+    manager = SessionManager(device, ableton)
+
+    # Demo 1: Snare timing drill
+    print("\n🥁 DEMO 1: Snare Timing Drill (Eighth Notes)")
+    print("-" * 60)
+
+    from lyra_live.ear_training.rhythm import RhythmExerciseGenerator
+
+    # Generate a snare exercise
+    exercise = RhythmExerciseGenerator.generate_straight_pattern(
+        drum_part="snare",
+        subdivision="eighth",
+        tempo_bpm=100,
+        num_bars=2
+    )
+
+    # Set expected pattern for test device
+    device.set_expected_pattern(exercise.grid.beats)
+
+    # Simulate the drill without actual session manager
+    # (since we're just demonstrating the concept)
+    print(f"  Pattern: Straight eighth notes on snare")
+    print(f"  Tempo: 100 BPM")
+    print(f"  Bars: 2")
+    print(f"  Total hits expected: {len(exercise.grid.beats)}")
+    print()
+
+    # Get simulated hits
+    import time
+    start_time = time.time() * 1000
+    hits = device.detect_input(timeout_ms=5000)
+
+    if hits:
+        from lyra_live.ear_training.rhythm import RhythmValidator, Beat
+
+        # Convert MIDIEvents to Beats
+        actual_beats = []
+        for event in hits:
+            relative_time = event.timestamp_ms - start_time
+            actual_beats.append(Beat(
+                time_ms=int(relative_time),
+                drum_part=device.get_drum_part(event.pitch) or "snare",
+                velocity=event.velocity
+            ))
+
+        # Validate
+        result = RhythmValidator.validate_rhythm(
+            expected_grid=exercise.grid,
+            actual_hits=actual_beats,
+            tolerance_ms=50,
+            drum_part_filter="snare"
+        )
+
+        print("📊 Results:")
+        print(f"   Expected hits: {result.total_expected_hits}")
+        print(f"   Your hits: {result.total_actual_hits}")
+        print(f"   Correct: {result.correct_hits}")
+        print(f"   Accuracy: {result.accuracy_percentage:.1f}%")
+
+        if result.average_timing_error_ms != 0:
+            if result.average_timing_error_ms > 0:
+                print(f"   Timing: Dragging by {result.average_timing_error_ms:.1f}ms")
+            else:
+                print(f"   Timing: Rushing by {abs(result.average_timing_error_ms):.1f}ms")
+
+        print(f"\n   {result.feedback}")
+        print()
+
+        return result
+    else:
+        print("   No hits detected")
+        return None
+
+
+def run_rhythm_backbeat_demo(mode: str = "perfect"):
+    """
+    Run a deterministic backbeat pattern demo.
+
+    Args:
+        mode: TestDrumKitProfile mode (perfect, rushing, dragging)
+
+    Returns:
+        RhythmResult
+    """
+    print("\n" + "="*60)
+    print("LYRA LIVE - BACKBEAT PATTERN DEMO")
+    print("="*60)
+    print(f"Mode: {mode}")
+    print()
+
+    # Set random seed for reproducibility
+    random.seed(456)
+
+    # Create test drum kit and session
+    device = TestDrumKitProfile(mode=mode)
+    ableton = AbletonMCPClient()
+
+    print("\n🥁 DEMO: Full Kit Backbeat Pattern")
+    print("-" * 60)
+
+    from lyra_live.ear_training.rhythm import RhythmExerciseGenerator
+
+    # Generate backbeat exercise
+    exercise = RhythmExerciseGenerator.generate_backbeat_pattern(
+        tempo_bpm=90,
+        num_bars=2
+    )
+
+    # Set expected pattern for test device
+    device.set_expected_pattern(exercise.grid.beats)
+
+    print(f"  Pattern: Kick on 1&3, Snare on 2&4")
+    print(f"  Tempo: 90 BPM")
+    print(f"  Bars: 2")
+    print(f"  Total hits expected: {len(exercise.grid.beats)}")
+    print()
+
+    # Get simulated hits
+    import time
+    start_time = time.time() * 1000
+    hits = device.detect_input(timeout_ms=6000)
+
+    if hits:
+        from lyra_live.ear_training.rhythm import RhythmValidator, Beat
+
+        # Convert MIDIEvents to Beats
+        actual_beats = []
+        for event in hits:
+            relative_time = event.timestamp_ms - start_time
+            actual_beats.append(Beat(
+                time_ms=int(relative_time),
+                drum_part=device.get_drum_part(event.pitch) or "snare",
+                velocity=event.velocity
+            ))
+
+        # Validate (no drum part filter for full kit)
+        result = RhythmValidator.validate_rhythm(
+            expected_grid=exercise.grid,
+            actual_hits=actual_beats,
+            tolerance_ms=50
+        )
+
+        print("📊 Results:")
+        print(f"   Expected hits: {result.total_expected_hits}")
+        print(f"   Your hits: {result.total_actual_hits}")
+        print(f"   Correct: {result.correct_hits}")
+        print(f"   Accuracy: {result.accuracy_percentage:.1f}%")
+
+        if result.average_timing_error_ms != 0:
+            if result.average_timing_error_ms > 0:
+                print(f"   Timing: Dragging by {result.average_timing_error_ms:.1f}ms")
+            else:
+                print(f"   Timing: Rushing by {abs(result.average_timing_error_ms):.1f}ms")
+
+        print(f"\n   {result.feedback}")
+        print()
+
+        return result
+    else:
+        print("   No hits detected")
+        return None

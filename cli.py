@@ -583,6 +583,22 @@ def demo_full():
 
 
 @cli.command()
+@click.option('--mode', default='perfect', help='Demo mode: perfect, rushing, dragging, inconsistent')
+def demo_rhythm(mode):
+    """Run rhythm timing demo (deterministic, for video recording)"""
+    from lyra_live.demos.demo_flows import run_rhythm_demo
+    run_rhythm_demo(mode=mode)
+
+
+@cli.command()
+@click.option('--mode', default='perfect', help='Demo mode: perfect, rushing, dragging')
+def demo_backbeat(mode):
+    """Run backbeat pattern demo (deterministic, for video recording)"""
+    from lyra_live.demos.demo_flows import run_rhythm_backbeat_demo
+    run_rhythm_backbeat_demo(mode=mode)
+
+
+@cli.command()
 def version():
     """Show Lyra Live version"""
     from lyra_live import __version__
