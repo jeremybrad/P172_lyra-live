@@ -920,3 +920,163 @@ class SessionManager:
             print(f"{'='*50}\n")
 
         return results
+
+    def run_improv_session(
+        self,
+        tune,
+        chorus_count: int = 3,
+        use_simulation: bool = False
+    ):
+        """
+        Run improvisation practice session over a jazz standard.
+
+        Sets up backing track, captures solo, analyzes and scores improvisation.
+
+        Args:
+            tune: StandardTune object
+            chorus_count: Number of choruses to play/record
+            use_simulation: If True, use test generator instead of real capture
+
+        Returns:
+            List of ImprovAnalysisResult (one per chorus)
+        """
+        from lyra_live.improv.core import ImprovNote, ImprovChorus
+        from lyra_live.improv.analysis import analyze_improvisation
+        from lyra_live.improv.test_utils import TestImprovGenerator
+        from pathlib import Path
+
+        print(f"\n{'='*60}")
+        print(f"🎺 IMPROVISATION SESSION: {tune.title}")
+        print(f"{'='*60}\n")
+
+        print(f"📋 Tune Info:")
+        if tune.composer:
+            print(f"   Composer: {tune.composer}")
+        print(f"   Key: {tune.key}")
+        print(f"   Tempo: {tune.tempo} BPM")
+        print(f"   Form: {tune.form}")
+        print(f"   Choruses: {chorus_count}")
+        print()
+
+        # If using simulation (for testing/demo)
+        if use_simulation:
+            print("🤖 Using simulation mode (test generator)\n")
+            generator = TestImprovGenerator()
+
+            # Generate appropriate solo based on tune form
+            if 'blues' in tune.form.lower():
+                chorus = generator.generate_simple_blues_solo(
+                    style="chord_tones",
+                    note_count=chorus_count * 20
+                )
+                chorus.tune = tune
+            else:
+                chorus = generator.generate_ii_v_i_solo(
+                    style="chord_tones",
+                    note_count=chorus_count * 15
+                )
+                chorus.tune = tune
+
+            # Analyze
+            result = analyze_improvisation(chorus)
+            result.print_summary()
+
+            return [result]
+
+        # Real session with Ableton + device
+        midi_path = tune.get_full_midi_path(Path.cwd())
+
+        if midi_path and midi_path.exists():
+            # Set up Ableton session
+            session_id = self.ableton.create_standard_session(
+                midi_path=midi_path,
+                tempo=tune.tempo,
+                time_signature=tune.time_signature,
+                chorus_count=chorus_count
+            )
+
+            # Arm solo track
+            self.ableton.arm_solo_track(
+                track_name="Solo",
+                input_device=self.device.device_name
+            )
+
+            print(f"⏳ Get ready to improvise...")
+            print(f"   The band will play {chorus_count} chorus(es)")
+            print(f"   Play along when you hear the music start\n")
+
+            input("Press Enter when ready to start...")
+
+            # Start playback and capture
+            total_bars = tune.chorus_length_bars * chorus_count
+            self.ableton.start_playback_and_capture(duration_bars=total_bars)
+
+            print(f"\n🎵 Band is playing - GO!")
+            print(f"   (Recording {chorus_count} chorus(es)...)\n")
+
+            # Calculate duration
+            beat_duration_ms = (60000 / tune.tempo)
+            beats_per_bar = tune.time_signature[0]
+            total_duration_ms = total_bars * beats_per_bar * beat_duration_ms
+
+            # Wait for playback/capture to complete
+            # In real implementation, this would monitor Ableton transport
+            time.sleep(total_duration_ms / 1000.0)
+
+            # Stop and retrieve MIDI
+            print("\n⏸️  Recording complete!")
+            captured_notes = self.ableton.stop_and_retrieve_solo()
+
+            # For now, if Ableton doesn't return notes (stub),
+            # use device capture as fallback
+            if not captured_notes:
+                print("   (Using device-level capture as fallback)")
+                # This would need actual MIDI capture from device during playback
+                # For MVP, we can't do this without full Ableton integration
+                print("   ⚠️  Note: Full MIDI capture requires P050 integration")
+                print("   Use --simulation flag to test analysis engine\n")
+                return []
+
+            # Convert captured MIDI to ImprovNotes
+            chorus = ImprovChorus(
+                chorus_number=1,
+                tune=tune,
+                start_time_ms=0
+            )
+
+            for note_data in captured_notes:
+                # Calculate bar/beat position
+                time_from_start = note_data['time_ms']
+                beat_number = time_from_start / beat_duration_ms
+                bar = int(beat_number // beats_per_bar) % tune.chorus_length_bars
+                beat_in_bar = (beat_number % beats_per_bar) + 1.0
+
+                improv_note = ImprovNote(
+                    time_ms=note_data['time_ms'],
+                    pitch=note_data['pitch'],
+                    velocity=note_data['velocity'],
+                    duration_ms=note_data['duration_ms'],
+                    bar=bar,
+                    beat=beat_in_bar
+                )
+
+                chorus.notes.append(improv_note)
+
+            chorus.end_time_ms = max(n.time_ms for n in chorus.notes) if chorus.notes else 0
+
+            # Analyze the improvisation
+            print("\n🔍 Analyzing your improvisation...")
+            result = analyze_improvisation(chorus)
+
+            # Print detailed analysis
+            result.print_summary()
+
+            return [result]
+
+        else:
+            print(f"❌ Error: MIDI file not found for {tune.title}")
+            if tune.midi_path:
+                print(f"   Expected path: {midi_path}")
+            else:
+                print(f"   No MIDI path specified in tune metadata")
+            return []

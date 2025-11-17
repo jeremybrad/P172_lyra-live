@@ -10,11 +10,13 @@ Provides commands to:
 """
 
 import click
+from pathlib import Path
 from lyra_live.devices.discovery import list_midi_devices, get_device_profile
 from lyra_live.sessions.manager import SessionManager
 from lyra_live.ableton_backend.client import AbletonMCPClient
 from lyra_live.lessons.core import Lesson, LessonPhrase
 from lyra_live.ear_training.base import Note
+from lyra_live.standards.core import StandardsLibrary
 
 
 @click.group()
@@ -596,6 +598,240 @@ def demo_backbeat(mode):
     """Run backbeat pattern demo (deterministic, for video recording)"""
     from lyra_live.demos.demo_flows import run_rhythm_backbeat_demo
     run_rhythm_backbeat_demo(mode=mode)
+
+
+@cli.command()
+@click.option('--style', default=None, help='Filter by style (e.g., bebop, swing, ballad)')
+@click.option('--difficulty', default=None, help='Filter by difficulty (e.g., beginner, intermediate, advanced)')
+@click.option('--index-path', default='data/standards/index.yaml', help='Path to standards index file')
+def list_standards(style, difficulty, index_path):
+    """
+    List available jazz standards from the library.
+
+    Example:
+        lyra list-standards
+        lyra list-standards --style bebop
+        lyra list-standards --difficulty intermediate
+    """
+    try:
+        index_file = Path(index_path)
+
+        if not index_file.exists():
+            click.echo(f"\n❌ Standards index not found at: {index_path}")
+            click.echo("   Create an index file or specify a different path with --index-path\n")
+            return
+
+        library = StandardsLibrary(index_file)
+
+        # Apply filters using list_tunes()
+        tunes = library.list_tunes(style=style, difficulty=difficulty)
+
+        if not tunes:
+            click.echo("\n📚 No standards found matching your filters\n")
+            return
+
+        click.echo(f"\n📚 Jazz Standards Library ({len(tunes)} tunes):\n")
+
+        for tune in tunes:
+            click.echo(f"   • {tune.title}")
+            if tune.composer:
+                click.echo(f"     Composer: {tune.composer}")
+            click.echo(f"     Key: {tune.key} | Tempo: {tune.tempo} BPM | Form: {tune.form}")
+            if hasattr(tune, 'style') and tune.style:
+                click.echo(f"     Style: {tune.style}")
+            if hasattr(tune, 'difficulty') and tune.difficulty:
+                click.echo(f"     Difficulty: {tune.difficulty}")
+            click.echo()
+
+    except Exception as e:
+        click.echo(f"\n❌ Error loading standards library: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
+@click.argument('tune_name')
+@click.option('--loop', is_flag=True, default=True, help='Loop the backing track')
+@click.option('--index-path', default='data/standards/index.yaml', help='Path to standards index file')
+def play_standard(tune_name, loop, index_path):
+    """
+    Play a jazz standard backing track (no capture/analysis).
+
+    Example:
+        lyra play-standard "Autumn Leaves"
+        lyra play-standard "All The Things You Are" --no-loop
+    """
+    try:
+        index_file = Path(index_path)
+
+        if not index_file.exists():
+            click.echo(f"\n❌ Standards index not found at: {index_path}\n")
+            return
+
+        library = StandardsLibrary(index_file)
+
+        # Find tune by name
+        tune = library.get_tune(tune_name)
+
+        if not tune:
+            click.echo(f"\n❌ Tune not found: {tune_name}")
+            click.echo("\n   Available tunes:")
+            tune_list = library.list_tunes()
+            for t in tune_list[:10]:
+                click.echo(f"     • {t.title}")
+            if len(library.tunes) > 10:
+                click.echo(f"     ... and {len(library.tunes) - 10} more")
+            click.echo("\n   Use 'lyra list-standards' to see all tunes\n")
+            return
+
+        # Check Ableton connection
+        click.echo("\n🔍 Checking Ableton MCP server connection...")
+        ableton = AbletonMCPClient()
+
+        if not ableton.health_check():
+            click.echo("❌ P050 Ableton MCP server not reachable")
+            click.echo("   Make sure P050 is running on localhost:8080\n")
+            return
+        else:
+            click.echo("✓ Connected to Ableton MCP server\n")
+
+        click.echo(f"🎵 Playing: {tune.title}")
+        if tune.composer:
+            click.echo(f"   Composer: {tune.composer}")
+        click.echo(f"   Key: {tune.key} | Tempo: {tune.tempo} BPM\n")
+
+        # Get MIDI path
+        midi_path = tune.get_full_midi_path(Path.cwd())
+
+        if not midi_path.exists():
+            click.echo(f"❌ MIDI file not found at: {midi_path}\n")
+            return
+
+        # Play the standard
+        success = ableton.play_standard(midi_path, loop=loop)
+
+        if success:
+            click.echo("✓ Playback started")
+            click.echo("\n   Press Ctrl+C to stop\n")
+
+            # Keep running until interrupted
+            import time
+            while True:
+                time.sleep(1)
+        else:
+            click.echo("❌ Failed to start playback\n")
+
+    except KeyboardInterrupt:
+        click.echo("\n\n👋 Stopping playback")
+    except Exception as e:
+        click.echo(f"\n❌ Error: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
+@click.argument('tune_name')
+@click.option('--choruses', default=3, help='Number of choruses to play')
+@click.option('--device', default=None, help='MIDI device name')
+@click.option('--simulation', is_flag=True, help='Run in simulation mode (no hardware)')
+@click.option('--index-path', default='data/standards/index.yaml', help='Path to standards index file')
+def practice_improv(tune_name, choruses, device, simulation, index_path):
+    """
+    Practice improvisation over a jazz standard with analysis.
+
+    This will:
+    1. Play the backing track
+    2. Capture your solo
+    3. Analyze your improvisation (chord tones, guide tones, rhythm)
+    4. Provide feedback and scoring
+
+    Example:
+        lyra practice-improv "Autumn Leaves" --choruses 2
+        lyra practice-improv "Blue Bossa" --simulation
+    """
+    try:
+        index_file = Path(index_path)
+
+        if not index_file.exists():
+            click.echo(f"\n❌ Standards index not found at: {index_path}\n")
+            return
+
+        library = StandardsLibrary(index_file)
+
+        # Find tune by name
+        tune = library.get_tune(tune_name)
+
+        if not tune:
+            click.echo(f"\n❌ Tune not found: {tune_name}\n")
+            click.echo("   Use 'lyra list-standards' to see available tunes\n")
+            return
+
+        # Check Ableton connection (skip in simulation mode)
+        ableton = AbletonMCPClient()
+
+        if not simulation:
+            click.echo("\n🔍 Checking Ableton MCP server connection...")
+            if not ableton.health_check():
+                click.echo("❌ P050 Ableton MCP server not reachable")
+                click.echo("   Make sure P050 is running, or use --simulation flag\n")
+                return
+            else:
+                click.echo("✓ Connected to Ableton MCP server\n")
+        else:
+            click.echo("\n🎭 Running in SIMULATION mode (no hardware required)\n")
+
+        # Get device profile (only needed in real mode)
+        profile = None
+        if not simulation:
+            if not device:
+                devices = list_midi_devices()
+                if not devices:
+                    click.echo("❌ No MIDI devices found")
+                    click.echo("   Use --simulation flag to run without hardware\n")
+                    return
+                device = devices[0]
+                click.echo(f"📱 Using device: {device}")
+            else:
+                click.echo(f"📱 Using device: {device}")
+
+            profile = get_device_profile(device)
+
+        # Show tune info
+        click.echo(f"🎵 Standard: {tune.title}")
+        if tune.composer:
+            click.echo(f"   Composer: {tune.composer}")
+        click.echo(f"   Key: {tune.key} | Tempo: {tune.tempo} BPM | Form: {tune.form}")
+        click.echo(f"   Choruses: {choruses}\n")
+
+        # Create session manager
+        manager = SessionManager(profile, ableton)
+
+        # Run improvisation session
+        click.echo("=" * 60)
+        click.echo("STARTING IMPROVISATION SESSION")
+        click.echo("=" * 60)
+        click.echo()
+
+        results = manager.run_improv_session(
+            tune=tune,
+            chorus_count=choruses,
+            use_simulation=simulation
+        )
+
+        click.echo("\n" + "=" * 60)
+        click.echo("SESSION COMPLETE")
+        click.echo("=" * 60)
+
+        if results:
+            click.echo(f"\n✓ Analyzed {len(results)} chorus(es)")
+            click.echo("\n   Review the detailed analysis above for feedback\n")
+
+    except KeyboardInterrupt:
+        click.echo("\n\n👋 Session interrupted")
+    except Exception as e:
+        click.echo(f"\n❌ Error: {e}\n")
+        import traceback
+        traceback.print_exc()
 
 
 @cli.command()
