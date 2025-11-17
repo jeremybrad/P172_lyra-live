@@ -260,3 +260,107 @@ def midi_to_frequency(midi_note: int) -> float:
         Frequency in Hz
     """
     return 440.0 * (2.0 ** ((midi_note - 69) / 12.0))
+
+
+def detect_pitch_over_time(
+    audio_path: str,
+    sample_rate: int = 44100,
+    buffer_size: int = 2048,
+    hop_size: int = 512,
+    method: str = "yinfft",
+    min_confidence: float = 0.6
+) -> List[PitchReading]:
+    """
+    Detect pitch over time from a recorded audio file.
+
+    This is designed for analyzing improvisation solos - it processes
+    the entire audio file and returns a time series of pitch readings.
+
+    Args:
+        audio_path: Path to WAV file to analyze
+        sample_rate: Audio sample rate (should match the file)
+        buffer_size: Size of analysis buffer
+        hop_size: Number of samples between analyses
+        method: Pitch detection method (yinfft, yin, mcomb, fcomb, schmitt)
+        min_confidence: Minimum confidence for valid detection
+
+    Returns:
+        List of PitchReading objects with timestamps
+
+    Raises:
+        ImportError: If aubio is not installed
+        FileNotFoundError: If audio file doesn't exist
+    """
+    try:
+        import aubio
+        import numpy as np
+    except ImportError as e:
+        raise ImportError(
+            f"Pitch detection requires aubio: {e}\n"
+            "Install with: pip install aubio"
+        )
+
+    from pathlib import Path
+    import wave
+
+    audio_path = Path(audio_path)
+    if not audio_path.exists():
+        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+
+    # Create aubio pitch detector
+    pitch_detector = aubio.pitch(method, buffer_size, hop_size, sample_rate)
+    pitch_detector.set_unit("midi")
+    pitch_detector.set_silence(-40)  # dB threshold for silence
+
+    # Read the WAV file
+    with wave.open(str(audio_path), 'rb') as wf:
+        # Verify it's mono
+        if wf.getnchannels() != 1:
+            raise ValueError("Audio file must be mono (1 channel)")
+
+        # Read all audio data
+        num_frames = wf.getnframes()
+        audio_bytes = wf.readframes(num_frames)
+
+        # Convert to numpy array
+        # Most WAV files are 16-bit int
+        audio_samples = np.frombuffer(audio_bytes, dtype=np.int16)
+        # Convert to float32 in range [-1.0, 1.0]
+        audio_samples = audio_samples.astype(np.float32) / 32768.0
+
+    # Process audio in chunks
+    readings: List[PitchReading] = []
+    num_samples = len(audio_samples)
+
+    for i in range(0, num_samples - hop_size, hop_size):
+        # Extract chunk
+        chunk = audio_samples[i:i + hop_size]
+
+        # Detect pitch
+        midi_pitch = pitch_detector(chunk)[0]
+        confidence = pitch_detector.get_confidence()
+
+        # Calculate timestamp in milliseconds
+        timestamp_ms = int((i / sample_rate) * 1000)
+
+        # Convert MIDI to frequency
+        if midi_pitch > 0 and confidence >= min_confidence:
+            frequency = 440.0 * (2.0 ** ((midi_pitch - 69) / 12.0))
+            pitch_int = int(round(midi_pitch))
+
+            readings.append(PitchReading(
+                frequency=frequency,
+                pitch=pitch_int,
+                confidence=confidence,
+                timestamp_ms=timestamp_ms
+            ))
+        else:
+            # No valid pitch detected (silence, noise, etc.)
+            readings.append(PitchReading(
+                frequency=0.0,
+                pitch=None,
+                confidence=confidence,
+                timestamp_ms=timestamp_ms
+            ))
+
+    return readings

@@ -835,6 +835,104 @@ def practice_improv(tune_name, choruses, device, simulation, index_path):
 
 
 @cli.command()
+@click.argument('tune_name')
+@click.option('--choruses', default=3, help='Number of choruses to play')
+@click.option('--simulation', is_flag=True, help='Run in simulation mode (no microphone)')
+@click.option('--index-path', default='data/standards/index.yaml', help='Path to standards index file')
+def practice_improv_audio(tune_name, choruses, simulation, index_path):
+    """
+    Practice improvisation with audio input (saxophone, voice, etc.).
+
+    This command records audio from your microphone while playing the
+    backing track, then analyzes your improvisation using the same
+    harmonic and rhythmic analysis as MIDI-based sessions.
+
+    Perfect for saxophone, voice, or any monophonic instrument.
+
+    This will:
+    1. Play the backing track
+    2. Record audio from your microphone
+    3. Detect pitch over time
+    4. Analyze your improvisation (chord tones, guide tones, rhythm)
+    5. Provide feedback and scoring
+
+    Example:
+        lyra practice-improv-audio "Autumn Leaves" --choruses 2
+        lyra practice-improv-audio "Blue Bossa" --simulation
+    """
+    try:
+        index_file = Path(index_path)
+
+        if not index_file.exists():
+            click.echo(f"\n❌ Standards index not found at: {index_path}\n")
+            return
+
+        library = StandardsLibrary(index_file)
+
+        # Find tune by name
+        tune = library.get_tune(tune_name)
+
+        if not tune:
+            click.echo(f"\n❌ Tune not found: {tune_name}\n")
+            click.echo("   Use 'lyra list-standards' to see available tunes\n")
+            return
+
+        # Check Ableton connection (skip in simulation mode)
+        ableton = AbletonMCPClient()
+
+        if not simulation:
+            click.echo("\n🔍 Checking Ableton MCP server connection...")
+            if not ableton.health_check():
+                click.echo("⚠️  P050 Ableton MCP server not reachable")
+                click.echo("   Will record without backing track, or use --simulation flag\n")
+            else:
+                click.echo("✓ Connected to Ableton MCP server\n")
+        else:
+            click.echo("\n🎭 Running in SIMULATION mode (no microphone required)\n")
+
+        # Show tune info
+        click.echo(f"🎵 Standard: {tune.title}")
+        if tune.composer:
+            click.echo(f"   Composer: {tune.composer}")
+        click.echo(f"   Key: {tune.key} | Tempo: {tune.tempo} BPM | Form: {tune.form}")
+        click.echo(f"   Choruses: {choruses}\n")
+
+        # Create session manager (no device profile needed for audio)
+        manager = SessionManager(None, ableton)
+
+        # Run audio improvisation session
+        click.echo("=" * 60)
+        click.echo("STARTING AUDIO IMPROVISATION SESSION")
+        click.echo("=" * 60)
+        click.echo()
+
+        results = manager.run_improv_audio_session(
+            tune=tune,
+            chorus_count=choruses,
+            use_simulation=simulation
+        )
+
+        click.echo("\n" + "=" * 60)
+        click.echo("SESSION COMPLETE")
+        click.echo("=" * 60)
+
+        if results:
+            click.echo(f"\n✓ Analyzed {len(results)} chorus(es)")
+            click.echo("\n   Review the detailed analysis above for feedback\n")
+
+    except KeyboardInterrupt:
+        click.echo("\n\n👋 Session interrupted")
+    except ImportError as e:
+        click.echo(f"\n❌ Error: {e}")
+        click.echo("   Audio features require aubio and pyaudio.")
+        click.echo("   Install with: pip install aubio pyaudio\n")
+    except Exception as e:
+        click.echo(f"\n❌ Error: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
 def version():
     """Show Lyra Live version"""
     from lyra_live import __version__

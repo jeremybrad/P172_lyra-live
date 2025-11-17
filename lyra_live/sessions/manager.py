@@ -1080,3 +1080,136 @@ class SessionManager:
             else:
                 print(f"   No MIDI path specified in tune metadata")
             return []
+
+    def run_improv_audio_session(
+        self,
+        tune: 'StandardTune',
+        chorus_count: int = 3,
+        use_simulation: bool = False
+    ) -> List['ImprovAnalysisResult']:
+        """
+        Run an improvisation session using audio input (saxophone, voice, etc.).
+
+        This method orchestrates the complete audio-based improvisation workflow:
+        1. Sets up Ableton playback of the backing track
+        2. Records audio from microphone during playback
+        3. Analyzes pitch over time from the recording
+        4. Converts pitch curve to ImprovNotes
+        5. Runs harmonic/rhythmic analysis
+        6. Returns detailed analysis results
+
+        Args:
+            tune: StandardTune to practice
+            chorus_count: Number of choruses to play/record
+            use_simulation: If True, uses synthetic pitch curves for testing
+
+        Returns:
+            List of ImprovAnalysisResult objects (one per chorus analyzed)
+        """
+        from lyra_live.improv.audio_capture import AudioCapture, SimulatedAudioCapture
+        from lyra_live.improv.audio_to_improv import audio_to_improv_chorus
+        from lyra_live.improv.analysis import analyze_improvisation
+        from pathlib import Path
+
+        print(f"\n{'='*60}")
+        print(f"AUDIO IMPROVISATION SESSION: {tune.title}")
+        print(f"{'='*60}\n")
+
+        if use_simulation:
+            print("🎭 SIMULATION MODE (using synthetic pitch curve)\n")
+
+            # Import test generator
+            from lyra_live.improv.test_utils import AudioImprovGenerator
+
+            generator = AudioImprovGenerator(seed=42)
+
+            # Generate synthetic pitch curve based on tune form
+            if 'blues' in tune.form.lower():
+                chorus = generator.generate_audio_blues_solo(tune, chorus_count)
+            else:
+                chorus = generator.generate_audio_standard_solo(tune, chorus_count)
+
+            # Analyze
+            result = analyze_improvisation(chorus)
+
+            # Print summary
+            result.print_summary()
+
+            return [result]
+
+        else:
+            # Real mode: record audio and analyze
+
+            # Calculate duration
+            capture = AudioCapture()
+            duration = capture.calculate_duration(
+                tune.tempo,
+                tune.time_signature,
+                tune.chorus_length_bars,
+                chorus_count
+            )
+
+            print(f"📊 Session details:")
+            print(f"   Tune: {tune.title}")
+            print(f"   Key: {tune.key} | Tempo: {tune.tempo} BPM")
+            print(f"   Form: {tune.form} ({tune.chorus_length_bars} bars)")
+            print(f"   Choruses: {chorus_count}")
+            print(f"   Duration: {duration:.1f} seconds\n")
+
+            # Get MIDI path for backing track
+            midi_path = tune.get_full_midi_path(Path.cwd())
+
+            if not midi_path.exists():
+                print(f"❌ Error: MIDI file not found at {midi_path}")
+                return []
+
+            # Set up Ableton session (if available)
+            if self.ableton and self.ableton.health_check():
+                print("🎹 Setting up Ableton session...")
+                self.ableton.create_standard_session(
+                    str(midi_path),
+                    tune.tempo,
+                    tune.time_signature,
+                    chorus_count
+                )
+                print("✓ Ableton session ready\n")
+
+                # Start playback
+                print("▶️  Starting playback...")
+                self.ableton.play_standard(midi_path, loop=False)
+                print("   (Backing track is playing)\n")
+
+            else:
+                print("⚠️  Ableton not available - recording without backing track\n")
+
+            # Record audio
+            print(f"🎤 Recording audio for {duration:.1f} seconds...")
+            print("   Start playing now!\n")
+
+            audio_path = capture.record(duration)
+
+            print(f"\n✓ Recording saved to: {audio_path}\n")
+
+            # Stop Ableton playback
+            if self.ableton and self.ableton.health_check():
+                # Note: stop method would need to be added to AbletonMCPClient
+                # For now, playback will end naturally
+                pass
+
+            # Convert audio to ImprovChorus
+            print("🎵 Analyzing recorded audio...")
+            chorus = audio_to_improv_chorus(
+                str(audio_path),
+                tune,
+                chorus_number=1
+            )
+
+            print(f"\n📊 Analysis complete: {len(chorus.notes)} notes detected\n")
+
+            # Analyze improvisation
+            result = analyze_improvisation(chorus)
+
+            # Print detailed analysis
+            result.print_summary()
+
+            return [result]

@@ -303,3 +303,137 @@ class TestImprovGenerator:
         chorus.notes.sort(key=lambda n: n.time_ms)
 
         return chorus
+
+
+class AudioImprovGenerator:
+    """
+    Generates synthetic pitch curves for testing audio-based improvisation.
+
+    Unlike TestImprovGenerator which creates MIDI notes directly,
+    this creates synthetic audio pitch curves (as if from pitch detection)
+    that get converted to ImprovNotes through the normal audio pipeline.
+    """
+
+    def __init__(self, seed: int = 42):
+        """
+        Initialize test audio generator.
+
+        Args:
+            seed: Random seed for reproducibility
+        """
+        random.seed(seed)
+
+    def generate_audio_blues_solo(
+        self,
+        tune: StandardTune,
+        chorus_count: int = 1,
+        style: str = "chord_tones"
+    ) -> ImprovChorus:
+        """
+        Generate a synthetic blues solo by directly creating ImprovNotes.
+
+        For testing, we bypass actual audio recording and pitch detection,
+        and directly create the ImprovNote structures that would result
+        from analyzing a good solo.
+
+        Args:
+            tune: StandardTune (should be a blues)
+            chorus_count: Number of choruses (currently uses 1)
+            style: "chord_tones", "tensions", or "outside"
+
+        Returns:
+            ImprovChorus with synthetic notes
+        """
+        # Use the existing MIDI generator but wrap the result
+        generator = TestImprovGenerator(seed=random.randint(1, 10000))
+
+        # Generate using MIDI approach
+        chorus = generator.generate_simple_blues_solo(style=style, note_count=30)
+
+        # Update the tune reference
+        chorus.tune = tune
+
+        return chorus
+
+    def generate_audio_standard_solo(
+        self,
+        tune: StandardTune,
+        chorus_count: int = 1,
+        style: str = "chord_tones"
+    ) -> ImprovChorus:
+        """
+        Generate a synthetic standard solo.
+
+        For testing, creates ImprovNotes that would result from
+        analyzing a recorded solo over a jazz standard.
+
+        Args:
+            tune: StandardTune
+            chorus_count: Number of choruses (currently uses 1)
+            style: "chord_tones", "tensions", or "outside"
+
+        Returns:
+            ImprovChorus with synthetic notes
+        """
+        # Use existing MIDI generator
+        generator = TestImprovGenerator(seed=random.randint(1, 10000))
+
+        # Generate using ii-V-I approach
+        chorus = generator.generate_ii_v_i_solo(style=style, note_count=24)
+
+        # Update the tune reference
+        chorus.tune = tune
+
+        return chorus
+
+    def generate_pitch_curve_for_note(
+        self,
+        pitch: int,
+        duration_ms: int,
+        start_time_ms: int,
+        hop_size_ms: int = 11  # ~512 samples at 44100 Hz
+    ) -> List[dict]:
+        """
+        Generate a synthetic pitch curve for a single note.
+
+        This simulates what pitch detection would return for a stable note.
+
+        Args:
+            pitch: MIDI note number
+            duration_ms: How long the note lasts
+            start_time_ms: When the note starts
+            hop_size_ms: Time between pitch readings (milliseconds)
+
+        Returns:
+            List of pitch reading dicts with keys:
+                - timestamp_ms: Time in milliseconds
+                - pitch: MIDI note number
+                - frequency: Frequency in Hz
+                - confidence: Confidence (0.0 to 1.0)
+        """
+        from lyra_live.voice.pitch import midi_to_frequency
+
+        readings = []
+        current_time = start_time_ms
+        end_time = start_time_ms + duration_ms
+
+        while current_time < end_time:
+            # Add small random pitch variation (vibrato, cents deviation)
+            pitch_variation = random.uniform(-0.3, 0.3)  # ±30 cents
+            actual_pitch = pitch + (pitch_variation / 100.0)
+
+            frequency = midi_to_frequency(actual_pitch)
+
+            # Confidence is high for stable notes
+            confidence = random.uniform(0.85, 0.95)
+
+            readings.append({
+                'timestamp_ms': current_time,
+                'pitch': pitch,
+                'frequency': frequency,
+                'confidence': confidence
+            })
+
+            current_time += hop_size_ms
+
+        return readings
