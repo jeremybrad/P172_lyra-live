@@ -16,7 +16,9 @@ from lyra_live.ableton_backend.client import AbletonMCPClient
 from lyra_live.lessons.core import Lesson
 from lyra_live.devices.test_device import TestDeviceProfile
 from lyra_live.devices.drum_kit import DrumKitProfile
-from typing import List
+from lyra_live.logging.practice_log import PracticeSessionRecord, append_session
+from datetime import datetime
+from typing import List, Optional
 import time
 
 
@@ -34,6 +36,56 @@ class SessionManager:
         self.device = device
         self.ableton = ableton_client
 
+    def _log_session(
+        self,
+        mode: str,
+        duration_seconds: float,
+        source: str = "cli",
+        **kwargs
+    ) -> None:
+        """
+        Log a practice session to the persistent log.
+
+        Helper method to create and append a PracticeSessionRecord.
+
+        Args:
+            mode: Session mode (e.g., "intervals", "chords", "improv_midi")
+            duration_seconds: Duration of the session
+            source: Source of the session ("cli", "demo", "test")
+            **kwargs: Additional fields for PracticeSessionRecord (metrics, tune_id, etc.)
+        """
+        # Determine instrument from device
+        instrument = "unknown"
+        if self.device:
+            device_name = self.device.device_name.lower()
+            if "drum" in device_name or "donner" in device_name:
+                instrument = "drums"
+            elif "test" in device_name:
+                instrument = "test_device"
+            else:
+                instrument = "keyboard"  # Default for MIDI devices
+        else:
+            # No device (e.g., audio improv)
+            if mode == "improv_audio":
+                instrument = kwargs.get('instrument', 'sax')  # Could be sax or voice
+
+        # Create record
+        record = PracticeSessionRecord(
+            timestamp=datetime.now().isoformat(),
+            mode=mode,
+            instrument=instrument,
+            duration_seconds=duration_seconds,
+            source=source,
+            **kwargs
+        )
+
+        # Append to log (handles file creation, locking, etc.)
+        try:
+            append_session(record)
+        except Exception as e:
+            # Don't crash the session if logging fails
+            print(f"Warning: Failed to log practice session: {e}")
+
     def run_interval_drill(self, num_exercises: int = 10):
         """
         Run interval recognition drill session.
@@ -44,6 +96,7 @@ class SessionManager:
         Args:
             num_exercises: Number of exercises to run in this session
         """
+        start_time = time.time()
         results = []
 
         print(f"\n🎵 Starting Interval Recognition Drill")
@@ -133,6 +186,16 @@ class SessionManager:
             print(f"  💪 Keep practicing - you'll improve!")
 
         print(f"{'='*50}\n")
+
+        # Log session
+        duration = time.time() - start_time
+        accuracy = (correct_count / total_attempted * 100) if total_attempted > 0 else 0
+        self._log_session(
+            mode="intervals",
+            duration_seconds=duration,
+            num_exercises=total_attempted,
+            interval_accuracy=accuracy
+        )
 
         return results
 

@@ -933,6 +933,141 @@ def practice_improv_audio(tune_name, choruses, simulation, index_path):
 
 
 @cli.command()
+def show_stats():
+    """
+    Show practice statistics and progress.
+
+    Displays total practice time, breakdown by instrument and mode,
+    current streak, XP, rank, and badges earned.
+
+    Example:
+        lyra show-stats
+    """
+    try:
+        from lyra_live.logging.practice_log import load_sessions
+        from lyra_live.logging import progress_stats, gamification
+
+        sessions = load_sessions()
+
+        if not sessions:
+            click.echo("\n📊 No practice sessions logged yet.")
+            click.echo("   Start practicing to see your stats!\n")
+            return
+
+        # Filter out demos for main stats
+        real_sessions = [s for s in sessions if s.source != "demo"]
+
+        if not real_sessions:
+            click.echo("\n📊 No real practice sessions logged yet (only demos).\n")
+            return
+
+        click.echo("\n" + "=" * 60)
+        click.echo("PRACTICE STATISTICS")
+        click.echo("=" * 60)
+        click.echo()
+
+        # Total time
+        total_minutes = progress_stats.compute_totals(real_sessions)
+        total_hours = total_minutes / 60.0
+        click.echo(f"**Total Practice Time:** {total_minutes:.0f} minutes ({total_hours:.1f} hours)")
+        click.echo()
+
+        # Practice days and streak
+        practice_days = progress_stats.compute_practice_days(real_sessions)
+        streak = progress_stats.compute_recent_streak(real_sessions, days=30)
+        click.echo(f"**Practice Days:** {practice_days} days")
+        if streak > 0:
+            click.echo(f"**Current Streak:** {streak} consecutive days")
+        else:
+            click.echo(f"**Current Streak:** 0 days (practice today to start a streak!)")
+        click.echo()
+
+        # By instrument
+        click.echo("**By Instrument:**")
+        minutes_by_instrument = progress_stats.compute_minutes_by_instrument(real_sessions)
+        for instrument, minutes in sorted(minutes_by_instrument.items(), key=lambda x: -x[1]):
+            percentage = (minutes / total_minutes) * 100
+            click.echo(f"  • {instrument.capitalize()}: {minutes:.0f} min ({percentage:.0f}%)")
+        click.echo()
+
+        # By mode
+        click.echo("**By Mode:**")
+        minutes_by_mode = progress_stats.compute_minutes_by_mode(real_sessions)
+        for mode, minutes in sorted(minutes_by_mode.items(), key=lambda x: -x[1]):
+            percentage = (minutes / total_minutes) * 100
+            mode_display = mode.replace('_', ' ').title()
+            click.echo(f"  • {mode_display}: {minutes:.0f} min ({percentage:.0f}%)")
+        click.echo()
+
+        # XP and Rank
+        total_xp = gamification.compute_total_xp(real_sessions)
+        rank = gamification.determine_rank(total_xp)
+        next_rank, xp_needed = gamification.get_next_rank(total_xp)
+
+        click.echo(f"**XP:** {total_xp:,}")
+        click.echo(f"**Rank:** {rank.name} - {rank.description}")
+        if xp_needed > 0:
+            click.echo(f"**Next Rank:** {next_rank.name} ({xp_needed:,} XP needed)")
+        else:
+            click.echo(f"**Status:** Maximum rank achieved!")
+        click.echo()
+
+        # Badges
+        badges = gamification.compute_badges(real_sessions)
+        if badges:
+            click.echo(f"**Badges Earned ({len(badges)}):**")
+            for badge in badges:
+                badge_display = gamification.format_badge_display(badge)
+                click.echo(f"  🏆 {badge_display}")
+        else:
+            click.echo("**Badges:** None yet - keep practicing!")
+
+        click.echo()
+        click.echo("=" * 60)
+        click.echo()
+
+    except Exception as e:
+        click.echo(f"\n❌ Error loading stats: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
+@click.option('--days', default=7, help='Number of days to analyze (default: 7)')
+def show_journal(days):
+    """
+    Show teacher's practice journal.
+
+    Generates a narrative summary of recent practice sessions with
+    feedback on consistency, strengths, and areas for improvement.
+
+    Example:
+        lyra show-journal
+        lyra show-journal --days 14
+    """
+    try:
+        from lyra_live.logging.practice_log import load_sessions
+        from lyra_live.logging.teacher_journal import generate_teacher_entry
+
+        sessions = load_sessions()
+
+        if not sessions:
+            click.echo("\n📔 No practice sessions logged yet.")
+            click.echo("   Start practicing to see your journal!\n")
+            return
+
+        # Generate journal entry
+        entry = generate_teacher_entry(sessions, days=days)
+
+        click.echo("\n" + entry + "\n")
+
+    except Exception as e:
+        click.echo(f"\n❌ Error generating journal: {e}\n")
+        import traceback
+        traceback.print_exc()
+
+
+@cli.command()
 def version():
     """Show Lyra Live version"""
     from lyra_live import __version__
