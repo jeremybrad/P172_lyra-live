@@ -1,0 +1,18 @@
+# RELATIONS.yaml - Project relationship mapping
+# Auto-generated stub - update with actual relationships
+
+project:
+  name: "P172_lyra-live"
+  series: "P"
+
+# TODO: Define upstream dependencies
+upstream: []
+
+# TODO: Define downstream consumers
+downstream: []
+
+# TODO: Define data sources
+data_sources: []
+
+# Canonical truth source for personal knowledge
+truth_source: C002_sadb
