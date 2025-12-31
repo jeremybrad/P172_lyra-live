@@ -1,0 +1,43 @@
+version: 1
+repo: P172_lyra-live
+
+owner: "Jeremy (Al) Bradford"
+created_at: "2025-12-31"
+review:
+  cadence: "quarterly"
+  next_review: "2026-03-31"
+  goal: "Reduce exceptions by migrating dirs into standard layout where safe."
+
+allowed_additional_dirs:
+  - config
+  - data
+  - docs
+  - lyra_live
+  - tests
+
+per_dir:
+  config:
+    owner: "Al"
+    justification: "Legacy config folder (predates 30_config)."
+    planned_destination: "30_config (merge contents)"
+    review_cadence: "quarterly"
+  data:
+    owner: "Al"
+    justification: "Legacy data folder (predates 50_data)."
+    planned_destination: "50_data (merge contents)"
+    review_cadence: "quarterly"
+  docs:
+    owner: "Al"
+    justification: "Legacy documentation folder (predates 10_docs)."
+    planned_destination: "10_docs (merge contents)"
+    review_cadence: "quarterly"
+  lyra_live:
+    owner: "Al"
+    justification: "Core Lyra Live Python package - import paths depend on this name."
+    planned_destination: "40_src/lyra_live (if import-safe)"
+    review_cadence: "quarterly"
+  tests:
+    owner: "Al"
+    justification: "Test suite."
+    planned_destination: "40_src/tests"
+    review_cadence: "quarterly"
