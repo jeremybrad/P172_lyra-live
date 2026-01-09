@@ -1,0 +1,10 @@
+purpose: Scripted demo flows for video tutorials and presentations
+status: active
+dependencies:
+  - random
+  - lyra_live.devices.test_device
+  - lyra_live.sessions.manager
+  - lyra_live.ear_training
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

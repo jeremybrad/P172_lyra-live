@@ -1,0 +1,9 @@
+purpose: TestVoiceInput for simulating singing without a microphone
+status: active
+dependencies:
+  - typing
+  - lyra_live.voice.pitch
+  - time
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

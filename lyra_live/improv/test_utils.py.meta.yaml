@@ -1,0 +1,11 @@
+purpose: TestImprovGenerator and AudioImprovGenerator for synthetic solo generation
+status: active
+dependencies:
+  - random
+  - typing
+  - lyra_live.improv.core
+  - lyra_live.standards.core
+  - lyra_live.improv.analysis
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

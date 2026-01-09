@@ -1,0 +1,11 @@
+purpose: StandardTune, ChordChange, and StandardsLibrary classes for jazz standards
+status: active
+dependencies:
+  - dataclasses
+  - typing
+  - pathlib
+  - yaml
+  - json
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

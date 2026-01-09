@@ -1,0 +1,15 @@
+purpose: Pitch detection using aubio - PitchReading, PitchDetector, AubioPitchDetector
+status: active
+dependencies:
+  - abc
+  - dataclasses
+  - typing
+  - time
+  - aubio
+  - pyaudio
+  - numpy
+  - wave
+  - pathlib
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

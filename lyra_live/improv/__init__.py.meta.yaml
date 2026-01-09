@@ -1,0 +1,9 @@
+purpose: Improvisation analysis package initialization
+status: active
+dependencies:
+  - lyra_live.improv.core
+  - lyra_live.improv.analysis
+  - lyra_live.improv.test_utils
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

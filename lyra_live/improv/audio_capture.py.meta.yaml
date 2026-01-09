@@ -1,0 +1,11 @@
+purpose: AudioCapture for recording from microphone and SimulatedAudioCapture for testing
+status: active
+dependencies:
+  - wave
+  - tempfile
+  - pathlib
+  - typing
+  - time
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

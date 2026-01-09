@@ -1,0 +1,10 @@
+purpose: Rule-based teacher journal generator for practice feedback
+status: active
+dependencies:
+  - datetime
+  - typing
+  - lyra_live.logging.practice_log
+  - lyra_live.logging.progress_stats
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

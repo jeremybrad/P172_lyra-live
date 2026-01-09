@@ -1,0 +1,9 @@
+purpose: Core ear training data structures - Note, Exercise, ExerciseResult, ExerciseType
+status: active
+dependencies:
+  - dataclasses
+  - typing
+  - enum
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

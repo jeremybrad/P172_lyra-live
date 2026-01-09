@@ -1,0 +1,10 @@
+purpose: Progress statistics computation and analysis
+status: active
+dependencies:
+  - datetime
+  - typing
+  - collections
+  - lyra_live.logging.practice_log
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

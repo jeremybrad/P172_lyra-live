@@ -1,0 +1,13 @@
+purpose: Unit tests for Phase 5 practice logging, progress tracking, and gamification
+status: active
+dependencies:
+  - pytest
+  - datetime
+  - pathlib
+  - lyra_live.logging.practice_log
+  - lyra_live.logging.progress_stats
+  - lyra_live.logging.gamification
+  - lyra_live.logging.teacher_journal
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

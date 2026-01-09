@@ -1,0 +1,10 @@
+purpose: RhythmGrid, Beat, RhythmExerciseGenerator, and RhythmValidator for rhythm training
+status: active
+dependencies:
+  - dataclasses
+  - typing
+  - lyra_live.ear_training.base
+  - random
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

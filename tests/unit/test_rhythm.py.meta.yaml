@@ -1,0 +1,8 @@
+purpose: Unit tests for rhythm exercises and validation
+status: active
+dependencies:
+  - pytest
+  - lyra_live.ear_training.rhythm
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

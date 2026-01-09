@@ -1,0 +1,10 @@
+purpose: XP, ranks, and badges system for practice gamification
+status: active
+dependencies:
+  - dataclasses
+  - typing
+  - lyra_live.logging.practice_log
+  - lyra_live.logging.progress_stats
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

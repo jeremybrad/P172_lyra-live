@@ -1,0 +1,8 @@
+purpose: Standards library package initialization
+status: active
+dependencies:
+  - lyra_live.standards.core
+  - lyra_live.standards.midi_utils
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

@@ -1,0 +1,13 @@
+purpose: End-to-end tests using TestDeviceProfile for complete session flows
+status: active
+dependencies:
+  - pytest
+  - random
+  - lyra_live.devices.test_device
+  - lyra_live.sessions.manager
+  - lyra_live.ableton_backend.client
+  - lyra_live.lessons.core
+  - lyra_live.ear_training.base
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

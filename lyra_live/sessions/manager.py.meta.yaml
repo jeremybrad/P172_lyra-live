@@ -1,0 +1,13 @@
+purpose: SessionManager orchestrating practice sessions, drills, and lessons
+status: active
+dependencies:
+  - lyra_live.devices.base
+  - lyra_live.ear_training
+  - lyra_live.ableton_backend.client
+  - lyra_live.lessons.core
+  - datetime
+  - typing
+  - time
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

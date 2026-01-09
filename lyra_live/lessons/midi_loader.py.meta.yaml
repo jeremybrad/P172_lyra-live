@@ -1,0 +1,10 @@
+purpose: MIDI file loading and phrase extraction for lessons
+status: active
+dependencies:
+  - mido
+  - typing
+  - lyra_live.ear_training.base
+  - lyra_live.lessons.core
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

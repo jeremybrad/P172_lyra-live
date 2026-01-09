@@ -1,0 +1,10 @@
+purpose: Abstract DeviceProfile base class for MIDI hardware
+status: active
+dependencies:
+  - abc
+  - dataclasses
+  - typing
+  - re
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

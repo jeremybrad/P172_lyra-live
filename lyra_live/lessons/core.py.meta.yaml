@@ -1,0 +1,10 @@
+purpose: Lesson, LessonPhrase, and LessonPack classes for structured learning
+status: active
+dependencies:
+  - dataclasses
+  - typing
+  - lyra_live.ear_training.base
+  - lyra_live.ear_training.melodies
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

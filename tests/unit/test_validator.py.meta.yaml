@@ -1,0 +1,9 @@
+purpose: Unit tests for exercise validation logic
+status: active
+dependencies:
+  - pytest
+  - lyra_live.ear_training.base
+  - lyra_live.ear_training.validator
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

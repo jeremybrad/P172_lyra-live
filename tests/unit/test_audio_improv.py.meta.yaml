@@ -1,0 +1,14 @@
+purpose: Unit tests for Phase 4.5 audio-based improvisation analysis pipeline
+status: active
+dependencies:
+  - pytest
+  - pathlib
+  - lyra_live.voice.pitch
+  - lyra_live.improv.audio_to_improv
+  - lyra_live.improv.audio_capture
+  - lyra_live.improv.test_utils
+  - lyra_live.improv.analysis
+  - lyra_live.standards.core
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

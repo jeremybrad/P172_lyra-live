@@ -1,0 +1,9 @@
+purpose: Jazz solo analysis engine for harmonic and rhythmic evaluation
+status: active
+dependencies:
+  - typing
+  - lyra_live.improv.core
+  - lyra_live.standards.core
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

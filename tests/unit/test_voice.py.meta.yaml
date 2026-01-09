@@ -1,0 +1,10 @@
+purpose: Unit tests for voice exercises and pitch detection
+status: active
+dependencies:
+  - pytest
+  - lyra_live.voice.exercises
+  - lyra_live.voice.pitch
+  - lyra_live.ear_training.base
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

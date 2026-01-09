@@ -1,0 +1,9 @@
+purpose: Voice package initialization
+status: active
+dependencies:
+  - lyra_live.voice.pitch
+  - lyra_live.voice.exercises
+  - lyra_live.voice.test_utils
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

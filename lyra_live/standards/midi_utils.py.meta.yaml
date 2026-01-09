@@ -1,0 +1,11 @@
+purpose: MIDI parsing utilities for jazz standards chord extraction
+status: active
+dependencies:
+  - pathlib
+  - typing
+  - dataclasses
+  - mido
+  - lyra_live.standards.core
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

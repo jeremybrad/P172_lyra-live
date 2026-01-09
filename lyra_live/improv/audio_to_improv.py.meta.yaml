@@ -1,0 +1,11 @@
+purpose: Convert pitch curves to ImprovNote objects for analysis
+status: active
+dependencies:
+  - typing
+  - lyra_live.voice.pitch
+  - lyra_live.improv.core
+  - lyra_live.standards.core
+  - math
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

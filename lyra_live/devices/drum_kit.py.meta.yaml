@@ -1,0 +1,9 @@
+purpose: DrumKitProfile and DonnerDrumKitProfile for drum hardware
+status: active
+dependencies:
+  - lyra_live.devices.base
+  - typing
+  - time
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

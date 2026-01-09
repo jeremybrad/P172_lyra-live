@@ -1,0 +1,9 @@
+purpose: Main CLI for Lyra Live ear training application
+status: active
+dependencies:
+  - click
+  - pathlib
+  - lyra_live
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford

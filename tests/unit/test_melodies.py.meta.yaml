@@ -1,0 +1,9 @@
+purpose: Unit tests for melody imitation exercises
+status: active
+dependencies:
+  - pytest
+  - lyra_live.ear_training.melodies
+  - lyra_live.ear_training.base
+created: "2026-01-09"
+last_reviewed: "2026-01-09"
+author: Jeremy Bradford
