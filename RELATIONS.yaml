@@ -1,18 +1,31 @@
 # RELATIONS.yaml - Project relationship mapping
-# Auto-generated stub - update with actual relationships
+# Canonical ownership boundaries for P172_lyra-live
 
-project:
-  name: "P172_lyra-live"
-  series: "P"
+version: 2
+repo: P172_lyra-live
 
-# TODO: Define upstream dependencies
-upstream: []
+owns:
+  - "Runtime application code, exercises, and audio/interaction logic in 40_src/lyra_live"
+  - "MIDI device discovery and profile integrations (Ableton backend, device mappings)"
+  - "Standards library assets and playback/improvisation workflows"
+  - "Tests and validation artifacts in 60_tests"
 
-# TODO: Define downstream consumers
-downstream: []
+must_not_own:
+  - "Runtime secrets, credentials, and environment-specific `.env` values"
+  - "Global user secrets or workspace-level governance tooling (defer to C010/C001/C002/C003)"
+  - "Publishing tooling and docs-site infrastructure (defer to C019_docs-site if used)"
+  - "The canonical standards governance documents in C010_standards"
 
-# TODO: Define data sources
-data_sources: []
+depends_on:
+  - repo: P050_ableton-mcp
+    relationship: runtime_integration
+    description: "Provides Ableton Live control integration points"
 
-# Canonical truth source for personal knowledge
-truth_source: C002_sadb
+  - repo: P171_elevenlabs-music-mcp
+    relationship: optional_integration
+    description: "Music generation capability referenced in relates-to metadata"
+
+relates_to:
+  - repo: C010_standards
+    reason: "Standards and repository governance baseline"
+    note: "Project follows C010 governance conventions"
