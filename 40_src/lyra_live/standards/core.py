@@ -11,6 +11,19 @@ import yaml
 import json
 
 
+def _resolve_data_root(base_dir: Path) -> Path:
+    """Resolve standards data root with canonical + legacy fallback."""
+    canonical = base_dir / "50_data"
+    if canonical.exists():
+        return canonical
+
+    legacy = base_dir / "data"
+    if legacy.exists():
+        return legacy
+
+    return canonical
+
+
 @dataclass
 class ChordChange:
     """A single chord change at a specific time."""
@@ -37,7 +50,7 @@ class StandardTune:
     form: str = "AABA"  # Song form (AABA, ABAC, blues, etc.)
     chorus_length_bars: int = 32
 
-    # File paths (relative to data/standards/)
+    # File paths (relative to data root: 50_data/standards/ or data/standards/)
     midi_path: Optional[str] = None
     audio_path: Optional[str] = None
 
@@ -53,13 +66,13 @@ class StandardTune:
         """Get absolute path to MIDI file."""
         if not self.midi_path:
             return None
-        return base_dir / "data" / "standards" / self.midi_path
+        return _resolve_data_root(base_dir) / "standards" / self.midi_path
 
     def get_full_audio_path(self, base_dir: Path) -> Optional[Path]:
         """Get absolute path to audio file."""
         if not self.audio_path:
             return None
-        return base_dir / "data" / "standards" / self.audio_path
+        return _resolve_data_root(base_dir) / "standards" / self.audio_path
 
     def get_chord_at_time(self, bar: int, beat: float) -> Optional[str]:
         """

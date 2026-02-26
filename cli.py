@@ -19,6 +19,30 @@ from lyra_live.ear_training.base import Note
 from lyra_live.standards.core import StandardsLibrary
 
 
+CANONICAL_DATA_INDEX = Path("50_data/standards/index.yaml")
+LEGACY_DATA_INDEX = Path("data/standards/index.yaml")
+
+
+def resolve_standards_index_path(index_path: str) -> Path:
+    """
+    Return a standards index path in preference order:
+    1) explicit user-provided path when present
+    2) canonical data path
+    3) legacy data shim
+    """
+    requested_path = Path(index_path)
+    if requested_path.exists():
+        return requested_path
+
+    if CANONICAL_DATA_INDEX.exists():
+        return CANONICAL_DATA_INDEX
+
+    if LEGACY_DATA_INDEX.exists():
+        return LEGACY_DATA_INDEX
+
+    return requested_path
+
+
 @click.group()
 def cli():
     """
@@ -603,7 +627,7 @@ def demo_backbeat(mode):
 @cli.command()
 @click.option('--style', default=None, help='Filter by style (e.g., bebop, swing, ballad)')
 @click.option('--difficulty', default=None, help='Filter by difficulty (e.g., beginner, intermediate, advanced)')
-@click.option('--index-path', default='data/standards/index.yaml', help='Path to standards index file')
+@click.option('--index-path', default='50_data/standards/index.yaml', help='Path to standards index file')
 def list_standards(style, difficulty, index_path):
     """
     List available jazz standards from the library.
@@ -614,7 +638,7 @@ def list_standards(style, difficulty, index_path):
         lyra list-standards --difficulty intermediate
     """
     try:
-        index_file = Path(index_path)
+        index_file = resolve_standards_index_path(index_path)
 
         if not index_file.exists():
             click.echo(f"\n❌ Standards index not found at: {index_path}")
@@ -652,7 +676,7 @@ def list_standards(style, difficulty, index_path):
 @cli.command()
 @click.argument('tune_name')
 @click.option('--loop', is_flag=True, default=True, help='Loop the backing track')
-@click.option('--index-path', default='data/standards/index.yaml', help='Path to standards index file')
+@click.option('--index-path', default='50_data/standards/index.yaml', help='Path to standards index file')
 def play_standard(tune_name, loop, index_path):
     """
     Play a jazz standard backing track (no capture/analysis).
@@ -662,7 +686,7 @@ def play_standard(tune_name, loop, index_path):
         lyra play-standard "All The Things You Are" --no-loop
     """
     try:
-        index_file = Path(index_path)
+        index_file = resolve_standards_index_path(index_path)
 
         if not index_file.exists():
             click.echo(f"\n❌ Standards index not found at: {index_path}\n")
@@ -734,7 +758,7 @@ def play_standard(tune_name, loop, index_path):
 @click.option('--choruses', default=3, help='Number of choruses to play')
 @click.option('--device', default=None, help='MIDI device name')
 @click.option('--simulation', is_flag=True, help='Run in simulation mode (no hardware)')
-@click.option('--index-path', default='data/standards/index.yaml', help='Path to standards index file')
+@click.option('--index-path', default='50_data/standards/index.yaml', help='Path to standards index file')
 def practice_improv(tune_name, choruses, device, simulation, index_path):
     """
     Practice improvisation over a jazz standard with analysis.
@@ -750,7 +774,7 @@ def practice_improv(tune_name, choruses, device, simulation, index_path):
         lyra practice-improv "Blue Bossa" --simulation
     """
     try:
-        index_file = Path(index_path)
+        index_file = resolve_standards_index_path(index_path)
 
         if not index_file.exists():
             click.echo(f"\n❌ Standards index not found at: {index_path}\n")
@@ -838,7 +862,7 @@ def practice_improv(tune_name, choruses, device, simulation, index_path):
 @click.argument('tune_name')
 @click.option('--choruses', default=3, help='Number of choruses to play')
 @click.option('--simulation', is_flag=True, help='Run in simulation mode (no microphone)')
-@click.option('--index-path', default='data/standards/index.yaml', help='Path to standards index file')
+@click.option('--index-path', default='50_data/standards/index.yaml', help='Path to standards index file')
 def practice_improv_audio(tune_name, choruses, simulation, index_path):
     """
     Practice improvisation with audio input (saxophone, voice, etc.).
@@ -861,7 +885,7 @@ def practice_improv_audio(tune_name, choruses, simulation, index_path):
         lyra practice-improv-audio "Blue Bossa" --simulation
     """
     try:
-        index_file = Path(index_path)
+        index_file = resolve_standards_index_path(index_path)
 
         if not index_file.exists():
             click.echo(f"\n❌ Standards index not found at: {index_path}\n")

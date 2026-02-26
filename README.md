@@ -100,7 +100,7 @@ Lyra Live (P172)
 
 ```
 P172_lyra-live/
-├── lyra_live/              # Main package
+├── 40_src/lyra_live        # Main package
 │   ├── devices/            # Device profiles
 │   │   ├── generic_keyboard.py  # Standard MIDI keyboards
 │   │   ├── drum_kit.py         # Donner drum kit
@@ -119,7 +119,7 @@ P172_lyra-live/
 │   ├── ableton_backend/    # P050 MCP wrapper
 │   ├── sessions/           # Session orchestration
 │   └── config/             # Configuration
-├── tests/                  # pytest tests (66 tests)
+├── 60_tests/               # pytest tests (66 tests)
 │   ├── unit/               # Unit tests
 │   │   ├── test_intervals.py
 │   │   ├── test_chords.py
@@ -127,7 +127,7 @@ P172_lyra-live/
 │   │   └── test_voice.py
 │   └── test_e2e.py        # End-to-end tests
 ├── docs/                   # Documentation
-├── config/                 # YAML configs
+├── 30_config/              # YAML configs
 ├── cli.py                 # CLI interface
 ├── README.md              # This file
 └── requirements.txt       # Dependencies
@@ -185,13 +185,13 @@ P172_lyra-live/
 
 ```bash
 # All tests
-pytest tests/
+pytest 60_tests/
 
 # Unit tests only
-pytest tests/unit/ -v
+pytest 60_tests/unit/ -v
 
 # Specific test
-pytest tests/unit/test_intervals.py -v
+pytest 60_tests/unit/test_intervals.py -v
 ```
 
 ### Development Setup
@@ -201,10 +201,10 @@ pytest tests/unit/test_intervals.py -v
 pip install -e .
 
 # Run linting
-flake8 lyra_live/
+flake8 40_src/lyra_live/
 
 # Type checking
-mypy lyra_live/
+mypy 40_src/lyra_live/
 ```
 
 ---
@@ -220,7 +220,7 @@ mypy lyra_live/
 
 ## 🔧 Configuration
 
-**Global Settings** (`config/settings.yml`):
+**Global Settings** (`30_config/settings.yml` (TODO/legacy docs):
 ```yaml
 ableton_mcp:
   host: localhost
@@ -231,7 +231,7 @@ practice:
   use_lights_when_available: true  # Phase 2
 ```
 
-**Device Mappings** (`config/devices.yml`):
+**Device Mappings** (`30_config/devices.yml` (TODO/legacy docs):
 ```yaml
 devices:
   - name_pattern: "Komplete Kontrol S88.*"

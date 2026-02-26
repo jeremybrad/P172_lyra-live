@@ -26,12 +26,25 @@ from lyra_live.improv.analysis import (
 from lyra_live.improv.test_utils import TestImprovGenerator
 
 
+def _resolve_index_path() -> Path:
+    """Return canonical standards index path with legacy shim fallback."""
+    canonical = Path("50_data/standards/index.yaml")
+    if canonical.exists():
+        return canonical
+
+    legacy = Path("data/standards/index.yaml")
+    if legacy.exists():
+        return legacy
+
+    return canonical
+
+
 class TestStandardsLibrary:
     """Test StandardsLibrary loading and searching"""
 
     def test_load_from_yaml(self):
         """Test loading standards library from YAML index"""
-        index_path = Path("data/standards/index.yaml")
+        index_path = _resolve_index_path()
 
         if not index_path.exists():
             pytest.skip(f"Index file not found at {index_path}")
@@ -55,7 +68,7 @@ class TestStandardsLibrary:
 
     def test_find_by_title(self):
         """Test searching for tunes by title"""
-        index_path = Path("data/standards/index.yaml")
+        index_path = _resolve_index_path()
 
         if not index_path.exists():
             pytest.skip(f"Index file not found at {index_path}")
@@ -79,7 +92,7 @@ class TestStandardsLibrary:
 
     def test_filter_by_difficulty(self):
         """Test filtering tunes by difficulty"""
-        index_path = Path("data/standards/index.yaml")
+        index_path = _resolve_index_path()
 
         if not index_path.exists():
             pytest.skip(f"Index file not found at {index_path}")

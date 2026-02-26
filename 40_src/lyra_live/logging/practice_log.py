@@ -74,10 +74,13 @@ def get_log_path() -> Path:
     Get the path to the practice sessions log file.
 
     Returns:
-        Path to data/logs/practice_sessions.jsonl
+        Path to resolved data logs/practice_sessions.jsonl
     """
-    # Assume we're in the project root
-    return Path("data/logs/practice_sessions.jsonl")
+    for data_dir in (Path("50_data"), Path("data")):
+        if data_dir.exists():
+            return data_dir / "logs" / "practice_sessions.jsonl"
+
+    return Path("50_data/logs/practice_sessions.jsonl")
 
 
 def append_session(record: PracticeSessionRecord) -> None:
