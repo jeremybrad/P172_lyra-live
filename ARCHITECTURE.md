@@ -327,7 +327,9 @@ User plays note → DeviceProfile detects → Validation → Feedback
 ## Deployment
 
 ### Development
-- Run from source: `python -m lyra_live.cli`
+- Run from source: `python3 -m cli`
+- Install the baseline with `python3 -m pip install -r requirements.txt`
+- Install microphone extras only when needed with `python3 -m pip install -r requirements-voice.txt`
 - Edit code, test immediately
 
 ### Production (Future)

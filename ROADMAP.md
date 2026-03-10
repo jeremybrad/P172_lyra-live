@@ -1,29 +1,21 @@
 # ROADMAP
 
-Last updated: 2026-03-09
-Source: repo health / continuity probe on `main`
+Last updated: 2026-03-10
+Source: repo health / continuity probe on `main`, plus bootstrap/docs parity repair on `main`
 
 ## Now
 
-### 1. Repair bootstrap and entrypoint parity
-Why it matters: The documented quick start is not currently reliable on this machine, which blocks a basic confidence check for the repo.
-Evidence: `python3 -m cli --help` fails with `ModuleNotFoundError: No module named 'mido'`; `README.md` documents `python -m cli ...`; `HANDOFF.md`, `ARCHITECTURE.md`, `CLAUDE_CODE_SETUP.md`, and `PHASE1_TASKS.md` document `python -m lyra_live.cli ...`; `README.md` also documents `pip install -e .`, but the repo has no `pyproject.toml`, `setup.py`, or `setup.cfg`.
-First concrete step: Decide the supported bootstrap path for local development, then align README/setup docs and CLI entrypoint guidance to that single path.
-Effort: M
-Confidence: high
-Blockers or what lowers priority: If the repo is intentionally frozen as a legacy local-only project, the fix may be documentation-only rather than packaging work.
-
-### 2. Re-establish a trustworthy verification baseline
+### 1. Re-establish a trustworthy verification baseline
 Why it matters: Some core logic is healthy, but the full verification story is not currently dependable enough for quick session startup or safe iteration.
-Evidence: `python3 -m pytest tests/unit/test_intervals.py tests/unit/test_chords.py tests/unit/test_validator.py -q` passed 21 tests; `python3 -m pytest tests/unit -q` stops during collection on missing `mido`; `python3 -m mypy lyra_live` reports 99 errors in 18 files; `flake8` is documented in `README.md` but not installed in the current environment and not declared in `requirements.txt`.
-First concrete step: Separate dependency-light checks from hardware/audio-dependent checks, then define the minimum supported lint/type/test commands for this repo.
+Evidence: The documented bootstrap now works in a clean virtualenv with `python3 -m pip install -r requirements.txt`; `python3 -m cli --help` renders successfully; `python3 -m pytest tests/unit/test_intervals.py tests/unit/test_chords.py tests/unit/test_validator.py -q` passed 21 tests; `python3 -m mypy lyra_live` still reports 97 errors in 18 files; optional voice extras now live in `requirements-voice.txt` because `aubio` and `pyaudio` require extra system libraries on this machine.
+First concrete step: Decide whether to reduce third-party typing noise with stub packages/config or to start burning down the remaining real annotation issues file by file.
 Effort: M
 Confidence: high
-Blockers or what lowers priority: The repo may need optional dependency groups or a dedicated dev environment file before the baseline can be made repeatable.
+Blockers or what lowers priority: Some mypy failures are true code issues, while others are missing stubs for `requests`, `mido`, `numpy`, `pyaudio`, and `yaml`.
 
 ## Next
 
-### 3. Decide whether the repo stays hybrid or completes the canonical migration
+### 2. Decide whether the repo stays hybrid or completes the canonical migration
 Why it matters: The active source and tests still live in legacy root paths, while the canonical directories mostly exist as placeholders, which slows orientation and creates false positives in tooling.
 Evidence: Active code lives in `lyra_live/` and `tests/`; `40_src/lyra_live` and `60_tests/` currently contain ignored cache artifacts rather than the active source tree; `00_admin/audit_exceptions.yaml` allows the legacy dirs, but its planned destination for tests is `40_src/tests`, which conflicts with the canonical `60_tests` convention.
 First concrete step: Add repo-local guidance that explicitly names the active source/test roots and the intended end state, then either migrate or simplify the placeholder directories.
@@ -33,7 +25,7 @@ Blockers or what lowers priority: Import-path compatibility and any external too
 
 ## Later
 
-### 4. Run a real hardware-backed smoke pass against P050
+### 3. Run a real hardware-backed smoke pass against P050
 Why it matters: The value of Lyra Live is in device-aware practice through Ableton, and that remains largely unverified in this probe.
 Evidence: This probe did not install missing runtime dependencies, did not verify MIDI hardware presence, and did not hit a live P050-backed exercise flow.
 First concrete step: In a provisioned environment with MIDI hardware and the P050 service available, run the documented CLI practice commands and capture a short evidence receipt.
@@ -43,6 +35,7 @@ Blockers or what lowers priority: Requires local hardware, audio/MIDI drivers, a
 
 ## Completed recently
 
+- 2026-03-10: Bootstrap/docs parity repaired; standardized on `python3 -m cli`, split optional voice extras into `requirements-voice.txt`, added `mypy` to the supported baseline, and verified the documented smoke plus pure-logic unit checks in a clean virtualenv.
 - 2026-03-09: Health probe completed; roadmap and session continuity artifacts added.
 - 2026-01-13 to 2026-03-09: Betty/canonical scaffolding, metadata refreshes, and evidence-sidecar additions landed on `main` (`c545851`, `5623dba`, `b38c052`, `169659e`).
 

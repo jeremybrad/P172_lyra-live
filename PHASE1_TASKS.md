@@ -418,10 +418,10 @@ if __name__ == '__main__':
 **Usage**:
 ```bash
 # List devices
-python -m lyra_live.cli list-devices
+python3 -m cli list-devices
 
 # Run interval drill
-python -m lyra_live.cli practice-intervals --device "Generic Keyboard" --num-exercises 5
+python3 -m cli practice-intervals --device "Generic Keyboard" --num-exercises 5
 ```
 
 #### Task 5.2: Unit Tests
@@ -480,6 +480,14 @@ requests>=2.31.0
 click>=8.1.0
 pytest>=7.4.0
 pyyaml>=6.0
+mypy>=1.19.0
+```
+
+Voice/microphone extras now live in `requirements-voice.txt`:
+
+```text
+aubio>=0.4.9
+pyaudio>=0.2.11
 ```
 
 ---

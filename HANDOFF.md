@@ -22,7 +22,8 @@ Build Phase 1 MVP: Basic interval recognition ear training that works with any M
 ✅ Complete project structure created  
 ✅ All documentation written (PRD, Architecture, Setup guides)  
 ✅ Directory structure scaffolded  
-✅ requirements.txt with dependencies  
+✅ requirements.txt with the core Python/MIDI baseline  
+✅ requirements-voice.txt for optional microphone extras  
 ✅ .env.example for configuration  
 ✅ Test infrastructure ready  
 ✅ Git repository initialized and pushed to GitHub
@@ -47,7 +48,7 @@ Build Phase 1 MVP: Basic interval recognition ear training that works with any M
    - SessionManager class
    - Exercise flow: generate → play → capture → validate → feedback
 
-5. **CLI Interface** (`lyra_live/cli.py`)
+5. **CLI Interface** (`cli.py`)
    - Command: `list-devices` (show available MIDI devices)
    - Command: `practice-intervals` (run interval drill)
 
@@ -57,8 +58,9 @@ Build Phase 1 MVP: Basic interval recognition ear training that works with any M
    - Integration test with mocked P050 API
 
 ### Success Criteria - You're Done When:
-- ✅ `python -m lyra_live.cli list-devices` shows MIDI devices
-- ✅ `python -m lyra_live.cli practice-intervals` runs interval drill
+- ✅ `python3 -m cli --help` renders successfully
+- ✅ `python3 -m cli list-devices` shows MIDI devices
+- ✅ `python3 -m cli practice-intervals` runs interval drill
 - ✅ Exercise plays via Ableton (through P050)
 - ✅ User can play response on MIDI keyboard
 - ✅ Lyra validates and gives feedback ("Correct! That's a perfect fifth")
@@ -91,17 +93,25 @@ Build Phase 1 MVP: Basic interval recognition ear training that works with any M
 ### Quick Start Commands
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Create and activate a local virtualenv
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install the supported baseline
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+
+# Optional: voice/microphone exercises
+python3 -m pip install -r requirements-voice.txt
 
 # Run tests (as you build)
-pytest tests/unit/ -v
+python3 -m pytest tests/unit/test_intervals.py tests/unit/test_chords.py tests/unit/test_validator.py -q
 
 # Test device discovery (once implemented)
-python -m lyra_live.cli list-devices
+python3 -m cli list-devices
 
 # Run interval drill (once complete)
-python -m lyra_live.cli practice-intervals --device "Generic Keyboard"
+python3 -m cli practice-intervals --device "Generic Keyboard"
 ```
 
 ### Code Style Guidelines

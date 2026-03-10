@@ -35,36 +35,51 @@ python3 --version
 # Clone repository
 cd /Users/jeremybradford/SyncedProjects/P172_lyra-live
 
-# Install dependencies
-pip install -r requirements.txt
+# Create and activate a local virtualenv
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install the supported development/runtime baseline
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+
+# Optional: install microphone/voice extras
+python3 -m pip install -r requirements-voice.txt
+```
+
+### Supported Smoke Check
+
+```bash
+# Verify the CLI imports and renders help
+python3 -m cli --help
 ```
 
 ### Run Your First Exercise
 
 ```bash
 # List available MIDI devices
-python -m cli list-devices
+python3 -m cli list-devices
 
 # Run interval recognition drill
-python -m cli practice-intervals --device "Your Device Name" --num-exercises 5
+python3 -m cli practice-intervals --device "Your Device Name" --num-exercises 5
 
 # Run chord quality drill
-python -m cli practice-chords --num-exercises 5 --chord-types triads
+python3 -m cli practice-chords --num-exercises 5 --chord-types triads
 
 # Run melody imitation drill
-python -m cli practice-melody --num-exercises 5 --melody-length 6
+python3 -m cli practice-melody --num-exercises 5 --melody-length 6
 
 # Run rhythm drill (requires drum kit)
-python -m cli practice-rhythm-snare --subdivision eighth --tempo 80 --bars 4
-python -m cli practice-rhythm-kit --pattern backbeat --tempo 80 --bars 4
+python3 -m cli practice-rhythm-snare --subdivision eighth --tempo 80 --bars 4
+python3 -m cli practice-rhythm-kit --pattern backbeat --tempo 80 --bars 4
 
-# Run voice/pitch exercises (requires microphone)
-python -m cli practice-voice-pitch --exercises 10
-python -m cli practice-voice-scale --exercises 5 --scales major,minor
-python -m cli practice-voice-sightsing --exercises 5 --length 4
+# Run voice/pitch exercises (requires microphone + requirements-voice.txt)
+python3 -m cli practice-voice-pitch --exercises 10
+python3 -m cli practice-voice-scale --exercises 5 --scales major,minor
+python3 -m cli practice-voice-sightsing --exercises 5 --length 4
 
 # Run a deterministic demo (for video recording)
-python -m cli demo-intervals --mode correct
+python3 -m cli demo-intervals --mode correct
 ```
 
 **What happens**:
@@ -181,30 +196,27 @@ P172_lyra-live/
 
 ## 🧪 Development
 
-### Run Tests
+### Supported Verification Commands
 
 ```bash
-# All tests
-pytest tests/
+# Smoke check: import the CLI and render help
+python3 -m cli --help
 
-# Unit tests only
-pytest tests/unit/ -v
+# Dependency-light unit baseline
+python3 -m pytest tests/unit/test_intervals.py tests/unit/test_chords.py tests/unit/test_validator.py -q
 
-# Specific test
-pytest tests/unit/test_intervals.py -v
+# Type checking baseline
+python3 -m mypy lyra_live
 ```
 
-### Development Setup
+### Optional Deeper Checks
 
 ```bash
-# Install in editable mode
-pip install -e .
+# Full unit suite (voice/audio extras may be required)
+python3 -m pytest tests/unit -q
 
-# Run linting
-flake8 lyra_live/
-
-# Type checking
-mypy lyra_live/
+# Voice exercises need the optional voice dependency set
+python3 -m pip install -r requirements-voice.txt
 ```
 
 ---
@@ -251,7 +263,7 @@ devices:
 ### "No MIDI devices found"
 Check MIDI connections:
 ```bash
-python -c "import mido; print(mido.get_input_names())"
+python3 -c "import mido; print(mido.get_input_names())"
 ```
 
 ### "P050 Ableton MCP server not reachable"
@@ -262,7 +274,13 @@ python -c "import mido; print(mido.get_input_names())"
 ### "ImportError: No module named 'mido'"
 Install dependencies:
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
+```
+
+### "ImportError: No module named 'aubio' or 'pyaudio'"
+Install the optional voice extras:
+```bash
+python3 -m pip install -r requirements-voice.txt
 ```
 
 ---

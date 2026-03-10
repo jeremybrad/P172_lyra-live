@@ -53,8 +53,17 @@ P172_lyra-live/
 
 ### Step 2: Environment Setup (5 min)
 
-```bash# Install dependencies
-pip install -r requirements.txt
+```bash
+# Create and activate a local virtualenv
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install the supported baseline
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+
+# Optional: install microphone extras only if working on voice features
+python3 -m pip install -r requirements-voice.txt
 
 # Set up environment (if needed for future P050 API calls)
 cp .env.example .env
@@ -93,29 +102,26 @@ Work through these in sequence:
 
 ### Unit Tests (Required)
 ```bash
-# Test exercise logic
-pytest tests/unit/test_exercises.py -v
-
-# Test device profiles
-pytest tests/unit/test_devices.py -v
-
-# Test validation
-pytest tests/unit/test_validation.py -v
+# Supported dependency-light baseline
+python3 -m pytest tests/unit/test_intervals.py tests/unit/test_chords.py tests/unit/test_validator.py -q
 ```
 
 ### Integration Tests (Nice to have)
 ```bash
 # Test with mock P050 API
-pytest tests/integration/test_session.py -v
+python3 -m pytest tests/integration -q
 ```
 
 ### Manual Testing (Jeremy will do)
 ```bash
+# Smoke check
+python3 -m cli --help
+
 # List devices
-python -m lyra_live.cli list-devices
+python3 -m cli list-devices
 
 # Run interval drill
-python -m lyra_live.cli practice intervals --device "Generic Keyboard"
+python3 -m cli practice-intervals --device "Generic Keyboard"
 ```
 
 ---
@@ -123,8 +129,9 @@ python -m lyra_live.cli practice intervals --device "Generic Keyboard"
 ## 🎯 MVP Success Criteria
 
 You're done with Phase 1 when:
-- ✅ `lyra_live.cli list-devices` shows available MIDI devices
-- ✅ User can run `practice intervals` and see an interval played via Ableton
+- ✅ `python3 -m cli --help` renders successfully
+- ✅ `python3 -m cli list-devices` shows available MIDI devices
+- ✅ User can run `python3 -m cli practice-intervals` and see an interval played via Ableton
 - ✅ User can play response on MIDI keyboard
 - ✅ Lyra validates response and gives text feedback ("Correct! That's a perfect fifth")
 - ✅ All unit tests pass
@@ -238,7 +245,7 @@ Keep it simple: **Basic interval recognition on any MIDI keyboard**
 ## ✅ Checklist Before Calling It Done
 
 - [ ] All code has type hints and docstrings
-- [ ] Unit tests pass (`pytest tests/unit/`)
+- [ ] Supported unit baseline passes (`python3 -m pytest tests/unit/test_intervals.py tests/unit/test_chords.py tests/unit/test_validator.py -q`)
 - [ ] CLI can list MIDI devices
 - [ ] CLI can run basic interval drill
 - [ ] README has clear setup instructions
